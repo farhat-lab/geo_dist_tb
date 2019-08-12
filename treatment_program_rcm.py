@@ -362,7 +362,7 @@ combined = combined.dropna(subset=columns_of_interest)
 del combined['Unnamed: 0']
 
 variants_unique_WGS = set()
-
+strains_analyzed = set()
 for d in ['INH','RIF','SLIS','FLQ']:
 #for d in ['FLQ']:
 	"""
@@ -371,7 +371,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 
 	"""
 	file = open(d+'_resistant','w')
-	file.write('strain\tmutation\ttype')
+	file.write('strain\tmutation\ttype\n')
 	if(d not in drug_to_variants):
 		print("{} not detected at all".format(d))
 	else:
@@ -390,13 +390,13 @@ for d in ['INH','RIF','SLIS','FLQ']:
 		count = 0
 		for index, row in sub.iterrows():
 			det = False
-
+			strains_analyzed.add(row['strain'])
 			#Step 1: Search for commercial we already found (i.e. already in list, we already looked for it)
 			for mutation in mutations_interest:
 				if(int(row[str(mutation)]) == 1):
 					detected_commerical += 1
 					det = True
-					file.write('{}\t{}\t{}'.format(row['strain'], str(mutation), 'commercial'))
+					file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'commercial'))
 					break
 
 			#Step 2: If we found no commercial, then search the vcf for a mutation in the genes we didn't already find but are tested by commercial drugs
@@ -416,7 +416,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 						print("wow good thing we did this found a commercial!")
 						detected_commerical += 1
 						det = True
-						file.write('{}\t{}\t{}'.format(row['strain'], line, 'commercial'))
+						file.write('{}\t{}\t{}\n'.format(row['strain'], line, 'commercial'))
 						break
 
 			#Step 3: If the first two steps failed, then search our remaining list to see if WGS can pick it up
@@ -445,7 +445,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 						variants_unique_WGS.add(row['strain'])
 						detected_WGS += 1
 						det = True
-						file.write('{}\t{}\t{}'.format(row['strain'], str(mutation), 'WGS'))
+						file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'WGS'))
 						break
 
 			#Step 4: If after all that commercial and WGS can't find it then the strain is undetected with current information
@@ -461,7 +461,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 		print("DRUG: {} \t UNDETECTED: {} \t TOTAL: {} \t PERCENT UNDETECTED: {}".format(d, undetected, total, undetected/total))
 
 
-print("TOTAL NUMBER ISOLATES RESISTANCE IDENTIFIED VIA WGS: {}".format(len(list(variants_unique_WGS))))
+print("TOTAL NUMBER ISOLATES RESISTANCE IDENTIFIED VIA WGS: {} \ {}".format(len(list(variants_unique_WGS)),len(list(strains_analyzed))))
 
 
 
