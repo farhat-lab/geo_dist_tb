@@ -5,8 +5,6 @@ June 2018
 python3 geography.py <Strain identification table> <lineage table> <resistance data table>
 
 Takes in the tables and outputs a dataframe in the form of a tsv file with every strain, lineage, and resistance data in one place
-Then outputs a seperate dataframe in the form of a tsv file that displays country and each antibiotic with the number of strains in the country that 
-showed resistivity or susceptbility to that antibiotic
 
 """
 import sys
@@ -16,7 +14,7 @@ import re
 
 arguments = sys.argv
 
-#Take in the arguments and make it into a csv DictReader
+#Take in the arguments and make it into a csv DictReader for ease of use
 strain_identification = csv.DictReader(open(arguments[1]), delimiter='\t')
 lineages = csv.DictReader(open(arguments[2]), delimiter='\t')
 resistance = csv.DictReader(open(arguments[3]), delimiter='\t')
@@ -28,7 +26,6 @@ strain_to_date = {}
 run_to_xref = {}
 queryrun_to_xref = {}
 
-#print("STARTING OUR SEARCH")
 antibiotics = resistance.fieldnames[1:]
 
 #We first use the strain_identification to get a strain ID and the location associated with that ID
@@ -36,14 +33,14 @@ antibiotics = resistance.fieldnames[1:]
 #So I had to put a lot of if statements to take care of the subtelties of the data
 
 for row in strain_identification:
-	key = None
+
+	#First we need to figure out the ids that strains are referred to -- here I create id mappings that will be useful
+	#The reason for the mappings is because the data is messy, it uses different ids across the inputs
 	if(row['public_xref']):
 		key = row['public_xref']
-		#print("FOUND KEY: {}".format(key))
 		strain_info[key] = []
 	elif(row['internal_xref']):
 		key = row['internal_xref']
-		#print("FOUND KEY: {}".format(key))
 		strain_info[key] = []
 
 	runs = row['runs'].split(',')
@@ -56,6 +53,7 @@ for row in strain_identification:
 
 	place = None
 
+	#Geography information -- manual classification here
 	if('Peru' in key):
 		geography['Peru'].append(key)
 		place = 'Peru'
@@ -206,8 +204,7 @@ for lineage in lineages:
 		correct_lineage = "lineage7"
 
 
-	#For some reason lineage stuff uses ID and not xref -- so j put both made two try statements for both situations
-
+	#For some reason lineage uses ID and not xref -- so I just put both made two try statements for both situations
 	try:
 		strain_info[lineage['ID']].append(correct_lineage)
 	except KeyError:
@@ -217,7 +214,6 @@ for lineage in lineages:
 			try:
 				strain_info[queryrun_to_xref[lineage['ID']]].append(correct_lineage)
 			except KeyError:
-				#print("LINEAGE NO ID FOUND ERROR: {}".format(lineage['ID']))
 				pass
 
 
@@ -230,7 +226,6 @@ for lineage in lineages:
 			try:
 				strain_info[queryrun_to_xref[lineage['xref']]].append(correct_lineage)
 			except KeyError:
-				#print("LINEAGE NO ID FOUND ERROR: {}".format(lineage['ID']))
 				pass
 
 #For the strains that don't have lineages I make sure to add an empty list in their place so that the analysis later on doesn't get messed up
@@ -240,7 +235,6 @@ for strain in strain_info:
 		strain_info[strain].append([])
 
 #Now we break down the resistance again checking if any keys are bioprojects/biosamples and then adding this to the strain info
-
 for strain in resistance:
 	fail = False
 	currentkey = strain['Isolate'] 
@@ -250,7 +244,6 @@ for strain in resistance:
 		elif(currentkey in query_run):
 			currentkey = query_run[currentkey]
 		else:
-			#print("RESISTANCE NO ID FOUND ERROR: {}".format(currentkey))
 			fail=True
 
 	resistant = []
@@ -264,7 +257,6 @@ for strain in resistance:
 
 		strain_info[currentkey].append(resistant)
 		strain_info[currentkey].append(sensitive)
-		#print("STRAIN: {} RESISTANT: {} susceptable: {}".format(currentkey, resistant, sensitive))
 
 
 #We really want to have a dataframe so that joining by country becomes really easy and in general dataframes are nice to work with
@@ -281,12 +273,11 @@ for strain in strain_info:
 	susfail = False
 
 	location = info[0]
-	#print("STRAIN: {} INFO: {}".format(strain, info))
 	sub_dict['country'] = location
 
 	try:
 		lineage = info[1]
-		#print(lineage)
+
 		if(lineage == "lineage1"):
 			sub_dict['lineage1'] = 1
 		else:
@@ -341,7 +332,7 @@ for strain in strain_info:
 	except IndexError:
 		sensitive_antibiotics = []
 
-	#Logic if we have data for resistance it's resistant, if we have data for susceptible it's susceptible, else no data
+	#Logic here: if we have data for resistance it's resistant, if we have data for susceptible it's susceptible, else no data
 	for resistant in antibiotics:
 		if(resistant in resistant_antibiotics and resistant in sensitive_antibiotics):
 			raise Exception("Something seriously went wrong this should not have happened: {}".format(strain))
@@ -352,14 +343,7 @@ for strain in strain_info:
 		else:
 			sub_dict[resistant] = -1
 
-	# if(not susfail):
-	# 	for susceptable in antibiotics:
-	# 		if(susceptable in sensitive_antibiotics):
-	# 			sub_dict[susceptable+"_S"] = 1
-	# 		else:
-	# 			sub_dict[susceptable+"_S"] = 0
-
-	#Just really quickly adding in the date here
+	#Adding in the date here
 	sub_dict['date'] = strain_to_date[strain]
 
 	list_of_strain_info_dictionaries.append(sub_dict)
@@ -367,38 +351,9 @@ for strain in strain_info:
 #With the list of dictionaries I can now make the dataframe of interest, copy it, delete the strain and lineage parts, and then join on the country and sum!
 strain_info_df = pd.DataFrame(list_of_strain_info_dictionaries)
 
-#A quick aside where I create a dataframe mapping country to number of strains in that country--this is needed for some data analysis
-list_of_geography = []
-for key in geography:
-	new_geography = {}
-	new_geography['country'] = key
-	new_geography['number'] = len(geography[key])
-	list_of_geography.append(new_geography)
-
-country_numbers = pd.DataFrame(list_of_geography)
-
-#NEW STUFF ADDED IN####
+#We need to make sure we only consider strains that existed at the time of the MRSCA analysis (genomic_db has grown since then) so we add this logic
 strains = [i.rstrip() for i in open('final_all_strains','r').readlines()]
 strain_info_df = strain_info_df[strain_info_df['strain'].isin(strains)]
 
-
-#I save the country numbers mapping info and the strain info dictionary
+#Saving strain_info
 strain_info_df.to_csv('strain_info.tsv', sep='\t')
-country_numbers.to_csv('country_numbers.tsv',sep='\t')
-
-#I do the copying, deletion, and summing I talked about before here
-geo_resistance_data = strain_info_df.copy(deep=True)
-del geo_resistance_data['strain']
-
-country_resistance = geo_resistance_data.groupby("country").sum()
-
-#Now I have to normalize all of my data against the number of strains in each country--I do that here
-indices_of_interest = [i+"_R" for i in antibiotics]+[i+"_S" for i in antibiotics]+['lineage1','lineage2', 'lineage3', 'lineage4']
-
-for i, trial in country_resistance.iterrows():
-	number = len(geography[trial.name])
-	#print("COUNTRY: {} NUMBER: {}".format(trial.name, number))
-	country_resistance.loc[i] = country_resistance.loc[i]/number
-
-#I save this normalized, cut, modified data here
-country_resistance.to_csv('resistance_info.tsv', sep='\t')
