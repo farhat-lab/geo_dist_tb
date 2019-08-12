@@ -52,7 +52,7 @@ def produce_variant(line, search = 0, search_drug = None):
 		line = line.split('\t')
 		ID = line[5]
 		type_change_info = ID.split('_') 
-		print(type_change_info)
+		#print(type_change_info)
 		if(type_change_info[0] == 'SNP' and type_change_info[1] == 'CN'):
 				gene_name, codonAA = type_change_info[5], type_change_info[4]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
@@ -79,6 +79,10 @@ def produce_variant(line, search = 0, search_drug = None):
 			codon_position = [i for i in re.findall('\d*', type_change_info[3]) if i][0]
 			type_change = ''
         	#print("THERES SOMETHING ELSE LURKING HERE....RUN! {}".format(line))
+		#can just return false here cause Rv is def not a gene name of interest
+		if(gene_name not in ['katG','inhA','rpoB','rrs','eis','gyrA','gyrB']):
+			return False
+		
 	if(not search):
 		line = line.replace('\n','')
 		data = line.split('_')
@@ -301,7 +305,8 @@ del combined['Unnamed: 0']
 
 #NOW LOOK AT SUSCEPTIBLES FOR FALSE POSITIVE RATE WOOOOOOOO
 
-for d in ['INH','RIF','SLIS','FLQ']:
+#for d in ['INH','RIF','SLIS','FLQ']:
+for d in ['SLIS','FLQ']:
 	"""
 		FLQ includes CIP, OFLX, LEVO
 		SLIS includes KAN, AMK, CAP
@@ -322,6 +327,8 @@ for d in ['INH','RIF','SLIS','FLQ']:
 		detected_commerical = 0
 		detected_WGS = 0
 		undetected = 0
+		total_count = len(sub.index)
+		count = 0
 		for index, row in sub.iterrows():
 			det = False
 
@@ -337,10 +344,10 @@ for d in ['INH','RIF','SLIS','FLQ']:
 			if(not det):
 				#Go through lilne by line in vcf
 				vcf_file = [i for i in vcf_files if row['strain'] in i]
-				if(len(vcf_file) > 1):
-					raise Exception('More than one vcf file found for {}'.format(row['strain']))
-				elif(not vcf_file):
-					raise Exception('No vcf file found for {}'.format(row['strain']))
+				#if(len(vcf_file) > 1):
+				#	raise Exception('More than one vcf file found for {}'.format(row['strain']))
+				#elif(not vcf_file):
+				#	raise Exception('No vcf file found for {}'.format(row['strain']))
 				
 				name = vcf_file[0]
 				vcf = open(vcf_directory+'/'+name, 'r')
@@ -371,19 +378,20 @@ for d in ['INH','RIF','SLIS','FLQ']:
 									elif(d == 'SLIS'): 
 										if('KAN' in i or 'AMK' in i or 'CAP' in i):
 											WGS_only.append(i)
-
+			
 				for mutation in WGS_only:
 					if(int(row[str(mutation)]) == 1):
 						detected_WGS += 1
 						det = True
-						file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'commercial'))
+						file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'WGS'))
 						break
 
 			#Step 4: If after all that commercial and WGS can't find it then the strain is undetected with current information
 			if(not det):
 				undetected += 1
-
-
+			
+			count += 1
+			print("{}\t{}".format(count, total_count))
 			total += 1
 
 		print("DRUG: {} \t FALSE POSITIVE COMMERCIAL DETECTED: {} \t TOTAL: {} \t PERCENT DETECTED: {}".format(d, detected_commerical, total, detected_commerical/total))
