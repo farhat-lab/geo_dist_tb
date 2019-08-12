@@ -71,7 +71,13 @@ def produce_variant(line, search = 0, search_drug = None):
 				gene_name, codon_position = type_change_info[4], type_change_info[3]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1].replace('\n','')
 		else:
-			print("THERES SOMETHING ELSE LURKING HERE....RUN! {}".format(line))
+			#So this is a non-standard type, but it may still be relevant so we can just use regex
+			#for gene name we can always assume its in the same position
+			gene_name = type_change_info[4]
+			#However, for the codon position we use regex any numbers will be codon position
+			codon_position = [i for i in re.findall('\d*', type_change_info[3]) if i][0]
+			type_change = ''
+        	#print("THERES SOMETHING ELSE LURKING HERE....RUN! {}".format(line))
 	if(not search):
 		line = line.replace('\n','')
 		data = line.split('_')
@@ -122,13 +128,7 @@ def produce_variant(line, search = 0, search_drug = None):
 			type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1].replace('\n','') 
 			#type_change = None
 		else:
-			#So this is a non-standard type, but it may still be relevant so we can just use regex
-			#for gene name we can always assume its in the same position
-			gene_name = type_change_info[4]
-			#However, for the codon position we use regex any numbers will be codon position
-			codon_position = [i for i in re.findall('\d*', type_change_info[3]) if i][0]
-			type_change = ''
-        		#print("THERES SOMETHING ELSE LURKING HERE....RUN! {}".format(line))
+			print("THERES SOMETHING ELSE LURKING HERE....RUN! {}".format(line))
 
 	"""
 
