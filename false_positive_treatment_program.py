@@ -300,6 +300,8 @@ for d in ['INH','RIF','SLIS','FLQ']:
 		SLIS includes KAN, AMK, CAP
 
 	"""
+	file = open(d+'_susceptible','w')
+	file.write('strain\tmutation\ttype\n')
 
 	if(d not in drug_to_variants):
 		print("{} not detected at all".format(d))
@@ -321,25 +323,27 @@ for d in ['INH','RIF','SLIS','FLQ']:
 				if(int(row[str(mutation)]) == 1):
 					detected_commerical += 1
 					det = True
+					file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'commercial'))
 					break
 
-			# #Step 2: If we found no commercial, then search the vcf for a mutation in the genes we didn't already find but are tested by commercial drugs
-			# if(not det):
-			# 	#Go through lilne by line in vcf
-			# 	vcf_file = [i for i in vcf_files if row['strain'] in i]
-			# 	if(len(vcf_file) > 1):
-			# 		raise Exception('More than one vcf file found for {}'.format(row['strain']))
-			# 	elif(not vcf_file):
-			# 		raise Exception('No vcf file found for {}'.format(row['strain']))
+			#Step 2: If we found no commercial, then search the vcf for a mutation in the genes we didn't already find but are tested by commercial drugs
+			if(not det):
+				#Go through lilne by line in vcf
+				vcf_file = [i for i in vcf_files if row['strain'] in i]
+				if(len(vcf_file) > 1):
+					raise Exception('More than one vcf file found for {}'.format(row['strain']))
+				elif(not vcf_file):
+					raise Exception('No vcf file found for {}'.format(row['strain']))
 				
-			# 	name = vcf_file[0]
-			# 	vcf = open(vcf_directory+'/'+name, 'r')
-			# 	for line in vcf.readlines()[1:]:
-			# 		if(produce_variant(line, 1, d)):
-			# 			print("wow good thing we did this found a commercial!")
-			# 			detected_commerical += 1
-			# 			det = True
-			# 			break
+				name = vcf_file[0]
+				vcf = open(vcf_directory+'/'+name, 'r')
+				for line in vcf.readlines()[1:]:
+					if(produce_variant(line, 1, d)):
+						print("wow good thing we did this found a commercial!")
+						detected_commerical += 1
+						det = True
+						file.write('{}\t{}\t{}\n'.format(row['strain'], line, 'commercial'))
+						break
 
 			#Step 3: If the first two steps failed, then search our remaining list to see if WGS can pick it up
 			if(not det):
@@ -365,6 +369,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 					if(int(row[str(mutation)]) == 1):
 						detected_WGS += 1
 						det = True
+						file.write('{}\t{}\t{}\n'.format(row['strain'], str(mutation), 'commercial'))
 						break
 
 			#Step 4: If after all that commercial and WGS can't find it then the strain is undetected with current information
