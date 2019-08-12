@@ -173,6 +173,7 @@ def produce_variant(line, search = 0, search_drug = None):
 	FLQ gyrA 88-94
 	FLQ gyrB 500-541
 	"""
+	#THIS IS WHERE the info for commercial is stored -- we check if commercial!
 	def check(drug, gene_name, codon_position, search, type_change):
 		add = False
 		if(drug == 'INH' and gene_name == 'katG' and codon_position == 315):
@@ -244,6 +245,8 @@ def produce_variant(line, search = 0, search_drug = None):
 
 res = pd.read_csv('results_modified_unknown',sep='\t')
 
+
+#Complex logic here -- basically we only add to drug_to_variants if its a commercial one that we already found
 for line in [i for i in list(res.columns)[1:] if 'unknown' not in i and 'embA' not in i and 'PAS' not in i and 'PZA' not in i]:
 	produce_variant(line)
 
@@ -367,7 +370,8 @@ for d in ['INH','RIF','SLIS','FLQ']:
 		SLIS includes KAN, AMK, CAP
 
 	"""
-
+	file = open(d+'_resistant','w')
+	file.write('strain\tmutation\ttype')
 	if(d not in drug_to_variants):
 		print("{} not detected at all".format(d))
 	else:
@@ -392,6 +396,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 				if(int(row[str(mutation)]) == 1):
 					detected_commerical += 1
 					det = True
+					file.write('{}\t{}\t{}'.format(row['strain'], str(mutation), 'commercial'))
 					break
 
 			#Step 2: If we found no commercial, then search the vcf for a mutation in the genes we didn't already find but are tested by commercial drugs
@@ -411,6 +416,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 						print("wow good thing we did this found a commercial!")
 						detected_commerical += 1
 						det = True
+						file.write('{}\t{}\t{}'.format(row['strain'], line, 'commercial'))
 						break
 
 			#Step 3: If the first two steps failed, then search our remaining list to see if WGS can pick it up
@@ -439,6 +445,7 @@ for d in ['INH','RIF','SLIS','FLQ']:
 						variants_unique_WGS.add(row['strain'])
 						detected_WGS += 1
 						det = True
+						file.write('{}\t{}\t{}'.format(row['strain'], str(mutation), 'WGS'))
 						break
 
 			#Step 4: If after all that commercial and WGS can't find it then the strain is undetected with current information
