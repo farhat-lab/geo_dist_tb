@@ -1,6 +1,7 @@
 import pandas as pd 
 import argparse
 import os
+import re
 
 parser = argparse.ArgumentParser(description='Creates statistics about resistance detectable by commercial diagnostics vs WGS')
 
@@ -52,16 +53,16 @@ def produce_variant(line, search = 0, search_drug = None):
 		ID = line[5]
 		type_change_info = ID.split('_') 
 		print(type_change_info)
-		if(type_change_info[1] == 'CN'):
+		if(type_change_info[0] == 'SNP' and type_change_info[1] == 'CN'):
 				gene_name, codonAA = type_change_info[5], type_change_info[4]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-		elif(type_change_info[1] == 'P'):
+		elif(type_change_info[0] == 'SNP' and type_change_info[1] == 'P'):
 				gene_name, codonAA = type_change_info[4], type_change_info[3]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-		elif(type_change_info[1] == 'N'):
+		elif(type_change_info[0] == 'SNP' and type_change_info[1] == 'N'):
 				gene_name, codonAA = type_change_info[4], type_change_info[3]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-		elif(type_change_info[1] == 'I'):
+		elif(type_change_info[0] == 'SNP' and type_change_info[1] == 'I'):
 				gene_name, codonAA = type_change_info[4], type_change_info[3]
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 		elif(type_change_info[0] == 'INS' and type_change_info == 'F'):
