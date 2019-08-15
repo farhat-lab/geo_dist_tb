@@ -87,7 +87,7 @@ def annotate(df):
 			return -1
 
 	df['PAS'] = df.apply(lambda row: PARA_AMINOSALICYLIC_ACID(row),axis=1)
-
+	return df.copy()
 
 
 drugs = [ 'AMK', 'CAP', 'CIP', 'EMB', 'INH', 'KAN', 'LEVO', 'OFLX', 'PAS', 'PZA', 'RIF', 'STR']

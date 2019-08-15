@@ -21,8 +21,6 @@ strains_we_have = [i.rstrip() for i in open('final_all_strains','r').readlines()
 strain_info  = strain_info[strain_info['strain'].isin(strains_we_have)]
 strain_info = annotate(strain_info)
 
-res = pd.read_csv('results_modified_unknown',sep='\t')
-
 resistance_mutation = pd.read_csv('results_modified_unknown',sep='\t')
 combined = pd.merge(strain_info, resistance_mutation, on='strain', how='outer')
 
@@ -53,25 +51,29 @@ def break_down_mutation(mutation):
 		mutation = mutation.split('&')[0]
 	line = mutation.replace('\n','')
 	data = line.split('_')
+	print(data)
 	if(data[0] != 'SNP' and data[0] != 'INS' and data[0] != 'DEL' and data[0] != 'LSP'):
 		drug = data[0]
 		type_change_info = data[1:]
 	else:
 		drug = ''
 		type_change_info = data
+	
 
-
-	if(type_change_info[0] == 'SNP' and type_change_info[1] == 'I'):
+	if(type_change_info[0] == 'SNP' and type_change_info[1] in ['I','P','N']):
 		#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
 		gene_name, codonAA = type_change_info[4], type_change_info[3]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-	elif(type_change_info[0] == 'LSP' and type_change_info[1] == 'CN'):
+	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 		gene_name, codonAA, codonNT = type_change_info[5], type_change_info[4], type_change_info[3]
-		type_change, codon_position = re.sub('\d+-\d+', '-', codonAA), re.findall('\d+-\d+', codonNT)[0]
+		type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonNT)[0]
+	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['I','CZ']):
+		gene_name, codonNT = type_change_info[4], type_change_info[3]
+		type_change, codon_position = re.sub('\d+[-]+\d+','-', codonNT), re.findall('\d+[-]+\d+', codonNT)[0]
 	elif(type_change_info[0] == 'SNP' ):
 		gene_name, codonAA, codonNT = type_change_info[5], type_change_info[4], type_change_info[3]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonNT[1:len(codonNT)-1]
-	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] == 'I'):
+	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF']):
 		gene_name, deletion = type_change_info[4], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 	elif(type_change_info[0] == 'DEL' or type_change_info[0] == 'INS'):
@@ -104,17 +106,18 @@ def break_down_mutation(mutation):
 	# 	#However, for the codon position we use regex any numbers will be codon position
 	# 	codon_position = [i for i in re.findall('\d*', type_change_info[3]) if i][0]
 	# 	type_change = ''
-
+	print("{}\t{}\t{}\t{}".format(gene_name, codon_position, type_change, drug))
 	return Variant(gene_name, codon_position, type_change, drug=drug)  
 
 ###RUN CHECK MUTATION TEST i.e. see no failures
-
+count = 0
 for vcf_file in vcf_files:
-	vcf = open(vcf_file, 'r')
+	vcf = open(vcf_directory+'/'+vcf_file, 'r')
+	print("{}\{}".format(count, len(vcf_files)))
 	for line in vcf.readlines()[1:]:
 		variant = break_down_mutation(line)
-		print("{}\t{}".format(line.split('\t')[5], str(variant)))
-
+		#print("{}\t{}".format([i for i in line.split('\t') if i in ['SNP','DEL','INS','LSP']], str(variant)))
+	count += 1
 
 def check_variant_commercial(variant):
 	drug, gene_name, codon_position, type_change = variant.drug, variant.gene_name, variant.codon_position, variant.type_change
