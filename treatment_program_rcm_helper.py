@@ -16,7 +16,7 @@ class Variant:
 
 	def __str__(self):
 		if(self.AA_change):
-			return_string = self.AA_change[0]+self.codon_location+self.AA_change[1]
+			return_string = self.AA_change+self.codon_location
 		else:
 			return_string = self.codon_location
 		return "{}_{}".format(self.gene_name, return_string)

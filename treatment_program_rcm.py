@@ -51,7 +51,6 @@ def break_down_mutation(mutation):
 		mutation = mutation.split('&')[0]
 	line = mutation.replace('\n','')
 	data = line.split('_')
-	print(data)
 	if(data[0] != 'SNP' and data[0] != 'INS' and data[0] != 'DEL' and data[0] != 'LSP'):
 		drug = data[0]
 		type_change_info = data[1:]
@@ -84,18 +83,8 @@ def break_down_mutation(mutation):
 
 	return Variant(gene_name, codon_position, type_change, drug=drug)  
 
-###RUN CHECK MUTATION TEST i.e. see no failures
-count = 0
-for vcf_file in vcf_files:
-	vcf = open(vcf_directory+'/'+vcf_file, 'r')
-	print("{}\{}".format(count, len(vcf_files)))
-	for line in vcf.readlines()[1:]:
-		variant = break_down_mutation(line)
-		#print("{}\t{}".format([i for i in line.split('\t') if i in ['SNP','DEL','INS','LSP']], str(variant)))
-	count += 1
-
 def check_variant_commercial(variant, drug):
-	gene_name, codon_position, type_change = variant.gene_name, variant.codon_position, variant.type_change
+	gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
 	if(drug == 'ISONIAZID'):
 		drug = 'INH'
 	return_variable = False
@@ -123,40 +112,43 @@ def check_variant_commercial(variant, drug):
 	else:
 		return False
 
-
-
 file_resultat = open('commercial_results','w')
-file_resultat.format('drug\tmutation\tresistant\tsusceptible\tsynonymous\tasynonymous')
+file_resultat.write('drug\tmutation\tresistant\tsusceptible\tsynonymous\tasynonymous\n')
 for drug in ['ISONIAZID','RIF','SLIS','FQ']:
 	#memoization
-	store_results = {}
+	memoization = {}
+	count = 0
 	#Only look at strains with data
-	sub = strain_info[(strain_info['NO_DATA'] != 1) &(strain_info[drug] != -1)]
+	sub = combined[(combined['NO_DATA'] != 1) &(combined[drug] != -1)]
 	for index, row in sub.iterrows():
-		vcf = open(vcf_directory+'/'+row['strain'],'r')
-		print("{}\t{}".format(count, len(sub.iterrows())))
+		print("{}\t{}".format(count, len(list(sub.iterrows()))))
+		vcf = open(vcf_directory+'/'+row['strain']+'.var','r')
 		for line in vcf.readlines()[1:]:
 			mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
-			if(mutation in store_results):
-				if(store_results[mutation]):
-					file_resultat.write(store_results[mutation])
+			if(mutation in memoization):
+				if(memoization[mutation]):
+					file_resultat.write(memoization[mutation])
 			else:
 				commercial = check_variant_commercial(break_down_mutation(line), drug)
 				if(commercial):
 					if(row[drug] != 1):
 						if(commercial == 'synonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 0,1,1,0)
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 0,1,1,0))
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0)
+							print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
 						elif(commercial == 'asynonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 0,1,0,1)
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 0,1,0,1))
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1)
+							print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,0,1))
 					else:
 						if(commercial == 'synonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 1,0,1,0)
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 1,0,1,0))
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0)
+							print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,1,0))
 						elif(commercial == 'asynonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 1,0,0,1)
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}".format(drug, line.split('\t')[5], 1,0,0,1))
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1)
+							print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
 				else:
 					memoization[mutation] = False
 		count += 1
