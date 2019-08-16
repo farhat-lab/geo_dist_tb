@@ -122,39 +122,35 @@ for drug in ['ISONIAZID','RIF','SLIS','FQ']:
 	sub = combined[(combined['NO_DATA'] != 1) &(combined[drug] != -1)]
 	for index, row in sub.iterrows():
 		print("{}\t{}".format(count, len(list(sub.iterrows()))))
-		df = pd.read_csv(vcf_directory+'/'+row['strain']+'.var',sep='\t')
-		df['result'] = df['varname'].apply(lambda x: check_variant_commercial(break_down_mutation(x), drug))
-		commercial_hits = df[df['result'] != False]
-		for idex, hit in commercial_hits.iterrows():
-			print(hit)
-		# for line in vcf.readlines()[1:]:
-		# 	mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
-		# 	if(mutation in memoization):
-		# 		if(memoization[mutation]):
-		# 			file_resultat.write(memoization[mutation])
-		# 	else:
-		# 		commercial = check_variant_commercial(break_down_mutation(line), drug)
-		# 		if(commercial):
-		# 			if(row[drug] != 1):
-		# 				if(commercial == 'synonymous'):
-		# 					memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0)
-		# 					print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
-		# 					file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
-		# 				elif(commercial == 'asynonymous'):
-		# 					memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1)
-		# 					print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1))
-		# 					file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,0,1))
-		# 			else:
-		# 				if(commercial == 'synonymous'):
-		# 					memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0)
-		# 					print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0))
-		# 					file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,1,0))
-		# 				elif(commercial == 'asynonymous'):
-		# 					memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1)
-		# 					print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
-		# 					file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
-		# 		else:
-		# 			memoization[mutation] = False
+		vcf = open(vcf_directory+'/'+row['strain']+'.var','r')
+		for line in vcf.readlines()[1:]:
+			mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
+			if(mutation in memoization):
+				if(memoization[mutation]):
+					file_resultat.write(memoization[mutation])
+			else:
+				commercial = check_variant_commercial(break_down_mutation(line), drug)
+				if(commercial):
+					if(row[drug] != 1):
+						if(commercial == 'synonymous'):
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0)
+							print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,1,0))
+						elif(commercial == 'asynonymous'):
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1)
+							print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 0,1,0,1))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 0,1,0,1))
+					else:
+						if(commercial == 'synonymous'):
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0)
+							print("{}\t{}\t{}\t{}\t{}\t{\n}".format(drug, line.split('\t')[5], 1,0,1,0))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,1,0))
+						elif(commercial == 'asynonymous'):
+							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1)
+							print("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
+							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(drug, line.split('\t')[5], 1,0,0,1))
+				else:
+					memoization[mutation] = False
 		count += 1
 
 
