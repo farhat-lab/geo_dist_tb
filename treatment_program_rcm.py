@@ -64,14 +64,14 @@ def break_down_mutation(mutation):
 		gene_name, codonAA = type_change_info[4], type_change_info[3]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
-		gene_name, codonAA, codonNT = type_change_info[5], type_change_info[4], type_change_info[3]
-		type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonNT)[0]
+		gene_name, codonAA = type_change_info[5], type_change_info[4]
+		type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['I','CZ']):
 		gene_name, codonNT = type_change_info[4], type_change_info[3]
 		type_change, codon_position = re.sub('\d+[-]+\d+','-', codonNT), re.findall('\d+[-]+\d+', codonNT)[0]
 	elif(type_change_info[0] == 'SNP' ):
-		gene_name, codonAA, codonNT = type_change_info[5], type_change_info[4], type_change_info[3]
-		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonNT[1:len(codonNT)-1]
+		gene_name, codonAA = type_change_info[5], type_change_info[4]
+		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonNT[1:len(codonAA)-1]
 	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF']):
 		gene_name, deletion = type_change_info[4], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
