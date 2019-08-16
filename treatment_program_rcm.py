@@ -123,8 +123,8 @@ for drug in ['ISONIAZID','RIF','SLIS','FQ']:
 	for index, row in sub.iterrows():
 		print("{}\t{}".format(count, len(list(sub.iterrows()))))
 		df = pd.read_csv(vcf_directory+'/'+row['strain']+'.var',sep='\t')
-		df[‘result’] = df['varname'].apply(lambda x: check_variant_commercial(break_down_mutation(x)))
-		commercial_hits = df[df['result'] != 'False']
+		df['result'] = df['varname'].apply(lambda x: check_variant_commercial(break_down_mutation(x), drug))
+		commercial_hits = df[df['result'] != False]
 		for idex, hit in commercial_hits.iterrows():
 			print(hit)
 		# for line in vcf.readlines()[1:]:
