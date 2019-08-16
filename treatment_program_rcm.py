@@ -83,78 +83,85 @@ def break_down_mutation(mutation):
 
 	return Variant(gene_name, codon_position, type_change, drug=drug)  
 
-def check_variant_commercial(variant, drug):
+def check_variant_commercial(variant):
 	gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
 	if('-' not in codon_position):
 		codon_position = int(codon_position)
-	if(drug == 'ISONIAZID'):
-		drug = 'INH'
 	#Note negative signs are just positive
 	return_variable = False
-	if(drug == 'INH' and gene_name == 'katG' and codon_position == 315):
+	if(gene_name == 'katG' and codon_position == 315):
+		drug = 'ISONIAZID'
 		return_variable = True
-	elif(drug == 'INH' and 'inhA' in gene_name and codon_position in [15, 16,8]):
+	elif('inhA' in gene_name and codon_position in [15, 16,8]):
+		drug = 'ISONIAZID'
 		return_variable = True
-	elif(drug == 'RIF'  and gene_name == 'rpoB' and codon_position in list(range(424,453))):
+	elif(gene_name == 'rpoB' and codon_position in list(range(424,453))):
+		drug = 'RIF'
 		return_variable = True
-	elif(drug in ['KAN', 'AMK','CAP', 'SLIS'] and gene_name == 'rrs' and codon_position in [1401,1402]):
+	elif(gene_name == 'rrs' and codon_position in [1401,1402]):
+		drug = 'SLIS'
 		return_variable = True
-	elif(drug in ['KAN','AMK','CAP', 'SLIS'] and gene_name == 'eis' and codon_position in [10,11,12,13,14,37]):
+	elif(gene_name == 'eis' and codon_position in [10,11,12,13,14,37]):
+		drug = 'SLIS'
 		return_variable = True
 	#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
-	elif(drug in ['LEVO', 'CIP','OFLX', 'FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
+	elif(gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
+		drug = 'FLQ'
 		return_variable = True
 	#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
-	elif(drug in ['LEVO', 'CIP','OFLX', 'FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
+	elif(gene_name == 'gyrB' and codon_position in list(range(500,541))):
+		drug = 'FLQ'
 		return_variable = True
 
 	if(return_variable and type_change[0] == type_change[1]):
-		return 'synonymous'
+		return 'synonymous', drug
 	elif(return_variable and type_change[0] != type_change[1]):
-		return 'asynonymous'
+		return 'asynonymous', drug
 	else:
-		return False
+		return False, False
 
 file_resultat = open('commercial_results','w')
 file_resultat.write('strain\tdrug\tmutation\tresistant\tsusceptible\tsynonymous\tasynonymous\n')
-for drug in ['ISONIAZID','RIF','SLIS','FQ']:
+memoization = {}
+count = 0
+for strain in list(combined['strain'].values):
 	#memoization
-	memoization = {}
-	count = 0
+	count += 1
+	print("{}\t{}".format(count, len(list(combined['strain'].values))))
 	#Only look at strains with data
-	sub = combined[(combined['NO_DATA'] != 1) &(combined[drug] != -1)]
-	for index, row in sub.iterrows():
-		print("{}\t{}".format(count, len(list(sub.iterrows()))))
-		vcf = open(vcf_directory+'/'+row['strain']+'.var','r')
+	if(combined[combined['NO_DATA'] != 1]):
+		vcf = open(vcf_directory+'/'+strain'.var','r')
 		for line in vcf.readlines()[1:]:
 			mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
 			if(mutation in memoization):
 				if(memoization[mutation]):
 					file_resultat.write(memoization[mutation])
 			else:
-				commercial = check_variant_commercial(break_down_mutation(line), drug)
+				commercial, drug = check_variant_commercial(break_down_mutation(line), drug)
 				if(commercial):
-					if(row[drug] != 1):
-						if(commercial == 'synonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0)
-							print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
-						elif(commercial == 'asynonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1)
-							print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
-					else:
-						if(commercial == 'synonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0)
-							print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
-						elif(commercial == 'asynonymous'):
-							memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1)
-							print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
-							file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
+					#Make sure the strain has data for that drug
+					if(combined[combined == strain][drug].item != -1):
+						if(row[drug] != 1):
+							if(commercial == 'synonymous'):
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
+							elif(commercial == 'asynonymous'):
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
+						else:
+							if(commercial == 'synonymous'):
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
+							elif(commercial == 'asynonymous'):
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
 				else:
 					memoization[mutation] = False
-		count += 1
+		
 
 
 
