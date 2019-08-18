@@ -138,8 +138,8 @@ for strain in list(combined['strain'].values):
 	count += 1
 	print("{}\t{}".format(count, len(list(combined['strain'].values))))
 	#Only look at strains with data
-	if(combined[combined['NO_DATA'] != 1]):
-		vcf = open(vcf_directory+'/'+strain'.var','r')
+	if(combined[combined['strain'] == strain]['NO_DATA'].item != 1):
+		vcf = open(vcf_directory+'/'+strain+'.var','r')
 		for line in vcf.readlines()[1:]:
 			mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
 			if(mutation in memoization):
@@ -149,7 +149,7 @@ for strain in list(combined['strain'].values):
 				commercial, drug = check_variant_commercial(break_down_mutation(line), drug)
 				if(commercial):
 					#Make sure the strain has data for that drug
-					if(combined[combined == strain][drug].item != -1):
+					if(combined[combined['strain'] == strain][drug].item != -1):
 						if(row[drug] != 1):
 							if(commercial == 'synonymous'):
 								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0)
