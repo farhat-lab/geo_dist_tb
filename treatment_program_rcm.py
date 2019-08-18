@@ -109,18 +109,18 @@ def check_variant_commercial(variant):
 		return_variable = True
 	#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
 	elif(gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
-		drug = 'FLQ'
+		drug = 'FQ'
 		return_variable = True
 	#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
 	elif(gene_name == 'gyrB' and codon_position in list(range(500,541))):
-		drug = 'FLQ'
+		drug = 'FQ'
 		return_variable = True
 	#So here if its a LSP 
-	if(len(type_change) > 2):
+	if(len(type_change) > 2 and return_variable):
 		#return sysnonymous since something that large probs wont be synonymous
 		return 'asynonymous', drug
 	#If its just an insertion or something again not gonna be synonymous
-	if(len(type_change) == 1):
+	if(len(type_change) == 1 and return_variable):
 		return 'asynonymous', drug
 	if(return_variable and type_change[0] == type_change[1]):
 		return 'synonymous', drug
@@ -146,28 +146,28 @@ for strain in list(combined['strain'].values):
 				if(memoization[mutation]):
 					file_resultat.write(memoization[mutation])
 			else:
-				commercial, drug = check_variant_commercial(break_down_mutation(line), drug)
+				commercial, drug = check_variant_commercial(break_down_mutation(line))
 				if(commercial):
 					#Make sure the strain has data for that drug
 					if(combined[combined['strain'] == strain][drug].item != -1):
-						if(row[drug] != 1):
+						if(combined[combined['strain'] == strain][drug].item != 1):
 							if(commercial == 'synonymous'):
-								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0)
-								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
-								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,1,0))
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0))
 							elif(commercial == 'asynonymous'):
-								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1)
-								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
-								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 0,1,0,1))
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1))
 						else:
 							if(commercial == 'synonymous'):
-								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0)
-								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
-								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,1,0))
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0))
 							elif(commercial == 'asynonymous'):
-								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1)
-								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
-								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(row['strain'],drug, line.split('\t')[5], 1,0,0,1))
+								memoization[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1))
+								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1))
 				else:
 					memoization[mutation] = False
 		
