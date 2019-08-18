@@ -63,6 +63,9 @@ def break_down_mutation(mutation):
 		#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
 		gene_name, codonAA = type_change_info[4], type_change_info[3]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
+		if('inter-Rv2451c-eis' in mutation):
+			#since original position relative to Rv2451c and not eis
+			codon_position = (codon_position - 2715332)*(-1)
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
 		type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
@@ -112,7 +115,13 @@ def check_variant_commercial(variant):
 	elif(gene_name == 'gyrB' and codon_position in list(range(500,541))):
 		drug = 'FLQ'
 		return_variable = True
-
+	#So here if its a LSP 
+	if(len(type_change) > 2):
+		#return sysnonymous since something that large probs wont be synonymous
+		return 'asynonymous', drug
+	#If its just an insertion or something again not gonna be synonymous
+	if(len(type_change) == 1):
+		return 'asynonymous', drug
 	if(return_variable and type_change[0] == type_change[1]):
 		return 'synonymous', drug
 	elif(return_variable and type_change[0] != type_change[1]):
