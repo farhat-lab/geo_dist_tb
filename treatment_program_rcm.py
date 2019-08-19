@@ -63,9 +63,11 @@ def break_down_mutation(mutation):
 		#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
 		gene_name, codonAA = type_change_info[4], type_change_info[3]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-		if('inter-Rv2451c-eis' in mutation):
+		if('inter-Rv2451c-eis' in gene_name):
 			#since original position relative to Rv2451c and not eis
+			print("YAHOOO")
 			codon_position = (type_change_info[2] - 2715332)*(-1)
+			print(codon_position)
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
 		if('-' in codonAA):
@@ -107,7 +109,7 @@ def check_variant_commercial(variant):
 	elif(gene_name == 'rrs' and codon_position in [1401,1402]):
 		drug = 'SLIS'
 		return_variable = True
-	elif(gene_name == 'eis' and codon_position in [10,11,12,13,14,37]):
+	elif(gene_name != 'eis' and 'eis' in gene_name and  codon_position in [10,11,12,13,14,37]):
 		drug = 'SLIS'
 		return_variable = True
 	#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
