@@ -78,6 +78,9 @@ def break_down_mutation(mutation):
 	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N']):
 		gene_name, deletion = type_change_info[4], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
+	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] == 'NI'):
+		gene_name, deletion = type_change_info[4], type_change_info[3]
+		codon_position, type_change = re.findall('\i+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 	elif(type_change_info[0] == 'DEL' or type_change_info[0] == 'INS'):
 		gene_name, deletion = type_change_info[5], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
