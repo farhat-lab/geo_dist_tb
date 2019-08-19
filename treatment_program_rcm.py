@@ -75,12 +75,9 @@ def break_down_mutation(mutation):
 	elif(type_change_info[0] == 'SNP' ):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N']):
+	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N','NI']):
 		gene_name, deletion = type_change_info[4], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
-	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] == 'NI'):
-		gene_name, deletion = type_change_info[4], type_change_info[3]
-		codon_position, type_change = re.findall('\i+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 	elif(type_change_info[0] == 'DEL' or type_change_info[0] == 'INS'):
 		gene_name, deletion = type_change_info[5], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
@@ -132,9 +129,66 @@ def check_variant_commercial(variant):
 	else:
 		return False, False
 
+def check_RIF(gene):
+	return 'rpoB' in gene
+
+def check_SLIS(gene):
+	#drugs in SLIS 'KANAMYCIN' 'AMIKACIN' 'CAPREOMYCIN'
+	#KAN genes: rrs, tlyA
+	#AMK genes: rrs
+	#CAPREOMYCIN genes: rrs
+
+	return ('rrs' in gene ) or ('tlyA' in gene)
+
+def check_FQ(gene):
+	#drugs in FQ: 'MOXIFLOXACIN 'CIPROFLOXACIN' 'OFLOXACIN'
+	#MOX genes: gyrB, gyrA
+	#CIPRO genes: gyrB, gyrA
+	#OFLOX genes: gyrB, gyrA
+
+	return ('gyrB' in gene) or ('gyrA' in gene)
+
+
+def check_variant_WGS(variant):
+	gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
+	if('-' not in codon_position):
+		codon_position = int(codon_position)
+	#Note negative signs are just positive
+	return_variable = False
+	if(check_INH(gene_name)):
+		drug = 'ISONIAZID'
+		return_variable = True
+	elif(check_RIF(gene_name)):
+		drug = 'RIF'
+		return_variable = True
+	elif(check_SLIS(gene_name)):
+		drug = 'SLIS'
+		return_variable = True
+	elif(check_FQ(gene_name)):
+		drug = 'FQ'
+		return_variable = True
+
+	#So here if its a LSP 
+	if(len(type_change) > 2 and return_variable):
+		#return sysnonymous since something that large probs wont be synonymous
+		return 'asynonymous', drug
+	#If its just an insertion or something again not gonna be synonymous
+	if(len(type_change) == 1 and return_variable):
+		return 'asynonymous', drug
+	#ONLY CONSIDER ASYNONYMOUS
+	if(return_variable and type_change[0] != type_change[1]):
+		return 'asynonymous', drug
+	else:
+		return False, False
+
+
 file_resultat = open('commercial_results','w')
 file_resultat.write('strain\tdrug\tmutation\tresistant\tsusceptible\tsynonymous\tasynonymous\n')
+
+WGS_resultat = open('WGS_results','w')
+WGS_resultat.write('strain\tdrug\tmutation\tresistant\tsusceptible\tsynonymous\tasynonymous\n')
 memoization = {}
+memoization_WGS = {}
 count = 0
 for strain in list(combined['strain'].values):
 	#memoization
@@ -145,6 +199,7 @@ for strain in list(combined['strain'].values):
 		vcf = open(vcf_directory+'/'+strain+'.var','r')
 		for line in vcf.readlines()[1:]:
 			mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
+
 			if(mutation in memoization):
 				if(memoization[mutation]):
 					file_resultat.write(memoization[mutation])
@@ -173,8 +228,36 @@ for strain in list(combined['strain'].values):
 								file_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1))
 				else:
 					memoization[mutation] = False
-		
 
+
+			if(mutation in memoization_WGS):
+				if(memoization_WGS[mutation]):
+					WGS_resultat.write(memoization_WGS[mutation])
+			else:
+				WGS, drug = check_variant_WGS(break_down_mutation(line))
+				if(WGS):
+					#Make sure the strain has data for that drug
+					if(combined[combined['strain'] == strain][drug].item != -1):
+						if(combined[combined['strain'] == strain][drug].item != 1):
+							if(WGS == 'synonymous'):
+								memoization_WGS[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0))
+								WGS_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,1,0))
+							elif(WGS == 'asynonymous'):
+								memoization_WGS[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1))
+								WGS_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 0,1,0,1))
+						else:
+							if(WGS == 'synonymous'):
+								memoization_WGS[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0))
+								WGS_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,1,0))
+							elif(WGS == 'asynonymous'):
+								memoization_WGS[mutation] = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1)
+								print("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1))
+								WGS_resultat.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(strain,drug, line.split('\t')[5], 1,0,0,1))
+				else:
+					memoization_WGS[mutation] = False
 
 
 
