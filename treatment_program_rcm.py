@@ -136,7 +136,7 @@ def check_variant_commercial(variant):
 		return False, False
 
 def check_RIF(gene):
-	return 'rpoB' in gene
+	return 'rpoB' == gene
 
 def check_SLIS(gene):
 	#drugs in SLIS 'KANAMYCIN' 'AMIKACIN' 'CAPREOMYCIN'
@@ -144,7 +144,7 @@ def check_SLIS(gene):
 	#AMK genes: rrs
 	#CAPREOMYCIN genes: rrs
 
-	return ('rrs' in gene ) or ('tlyA' in gene)
+	return ('rrs' == gene ) or ('tlyA' == gene) or ('inter-eis-Rv2417c' == gene)
 
 def check_FQ(gene):
 	#drugs in FQ: 'MOXIFLOXACIN 'CIPROFLOXACIN' 'OFLOXACIN'
@@ -152,17 +152,17 @@ def check_FQ(gene):
 	#CIPRO genes: gyrB, gyrA
 	#OFLOX genes: gyrB, gyrA
 
-	return ('gyrB' in gene) or ('gyrA' in gene)
+	return ('gyrB' == gene) or ('gyrA' == gene)
 
 def check_INH(gene):
-	condition_one = 'inhA' in gene
-	condition_two = 'iniB' in gene
-	condition_three = 'embB' in gene
-	condition_four = ('inhA' in gene) and ('fabG1' in gene)
-	condition_five = 'ahpC' in gene
-	condition_six = ('embA' in gene) and ('embB' in gene)
-	condition_seven = 'kasA' in gene
-	condition_eight = 'katG' in gene 
+	condition_one = 'inhA' == gene
+	condition_two = 'iniB' == gene
+	condition_three = 'embB' == gene
+	condition_four = 'promoter-fabG1-inhA' == gene
+	condition_five = 'ahpC' == gene
+	condition_six = 'promoter-ahpC' == gene
+	condition_seven = 'kasA' == gene
+	condition_eight = 'katG' == gene 
 
 	return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight
 
