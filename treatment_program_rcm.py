@@ -68,14 +68,17 @@ def break_down_mutation(mutation):
 			codon_position = (codon_position - 2715332)*(-1)
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
-		type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
+		if('-' in codonAA):
+			type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
+		else:
+			type_change, codon_position = re.sub('\d+', '-', codonAA), re.findall('\d+', codonAA)[0]
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['I','CZ']):
 		gene_name, codonNT = type_change_info[4], type_change_info[3]
 		type_change, codon_position = re.sub('\d+[-]+\d+','-', codonNT), re.findall('\d+[-]+\d+', codonNT)[0]
 	elif(type_change_info[0] == 'SNP' ):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N','NI']):
+	elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N','NI','NZ','ND']):
 		gene_name, deletion = type_change_info[4], type_change_info[3]
 		codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 	elif(type_change_info[0] == 'DEL' or type_change_info[0] == 'INS'):
@@ -148,6 +151,17 @@ def check_FQ(gene):
 
 	return ('gyrB' in gene) or ('gyrA' in gene)
 
+def check_INH(gene):
+	condition_one = 'inhA' in gene
+	condition_two = 'iniB' in gene
+	condition_three = 'embB' in gene
+	condition_four = ('inhA' in gene) and ('fabG1' in gene)
+	condition_five = 'ahpC' in gene
+	condition_six = ('embA' in gene) and ('embB' in gene)
+	condition_seven = 'kasA' in gene
+	condition_eight = 'katG' in gene 
+
+	return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight
 
 def check_variant_WGS(variant):
 	gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
