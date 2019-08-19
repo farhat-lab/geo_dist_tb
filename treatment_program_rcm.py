@@ -57,7 +57,7 @@ def break_down_mutation(mutation):
 	else:
 		drug = ''
 		type_change_info = data
-	print(data)	
+	# print(data)	
 
 	if(type_change_info[0] == 'SNP' and type_change_info[1] in ['I','P','N']):
 		#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
@@ -126,6 +126,7 @@ def check_variant_commercial(variant):
 	if(len(type_change) == 1 and return_variable):
 		return 'asynonymous', drug
 	if(return_variable and type_change[0] == type_change[1]):
+		print("WOHOOOOO!!!!")
 		return 'synonymous', drug
 	elif(return_variable and type_change[0] != type_change[1]):
 		return 'asynonymous', drug
