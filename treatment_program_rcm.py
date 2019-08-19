@@ -65,7 +65,7 @@ def break_down_mutation(mutation):
 		type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 		if('inter-Rv2451c-eis' in mutation):
 			#since original position relative to Rv2451c and not eis
-			codon_position = (codon_position - 2715332)*(-1)
+			codon_position = (type_change_info[2] - 2715332)*(-1)
 	elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 		gene_name, codonAA = type_change_info[5], type_change_info[4]
 		if('-' in codonAA):
