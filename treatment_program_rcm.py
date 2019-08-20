@@ -238,7 +238,7 @@ class commercial_WGS_tester():
 
 
 def main():
-	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv')
+	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown')
 	tester.perform_commercial_test()
 	tester.perform_WGS_test()
 
