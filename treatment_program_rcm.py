@@ -8,7 +8,7 @@ from treatment_program_rcm_helper import *
 
 class commercial_WGS_tester():
 
-	def __init__(self, vcf_directory, strain_info):
+	def __init__(self, vcf_directory, strain_info, results_modified_unknown):
 		self.vcf_directory = vcf_directory
 		self.strain_info = self.setup(strain_info)
 
@@ -20,6 +20,10 @@ class commercial_WGS_tester():
 		strains_we_have = [i.rstrip() for i in open('final_all_strains','r').readlines()]
 		strain_info  = strain_info[strain_info['strain'].isin(strains_we_have)]
 		strain_info = annotate(strain_info)
+
+		results_modified_unknown = pd.read_csv('results_modified_unknown',sep='\t')
+		strain_info = strain_info[strain_info['strains'].isin(results_modified_unknown['strains'].values)]
+
 		return strain_info
 
 	def break_down_mutation(self, mutation):
@@ -239,7 +243,8 @@ def main():
 	tester.perform_WGS_test()
 
 
-if __name__ == "__main__"
+if __name__ == "__main__":
+	main()
 
 
 
