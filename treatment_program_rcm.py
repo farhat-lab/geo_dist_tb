@@ -227,6 +227,8 @@ class commercial_WGS_tester():
 
 	def post_processing(self,result, name):
 		lineage_snps = [i for i in open('lineage_snp','r').readlines()]
+		print(result)
+		print(result.columns)
 		result['count'] = 1
 		result = result[~result['mutation'].isin(lineage_snps)]
 		result = result.groupby(['drug','mutation']).sum().sort_values('drug',ascending=False).copy()
@@ -235,6 +237,9 @@ class commercial_WGS_tester():
 
 	def perform_commercial_test(self):
 		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant)), 'commercial_test_results')
+
+	def perform_WGS_test(self):
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant)), 'WGS_test_results')
 
 
 def main():
