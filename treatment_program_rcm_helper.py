@@ -198,5 +198,12 @@ drug_mapping = {
 		'ETH':'ETHIONAMIDE'
 	}
 
+drug_to_region = {
+	'INH':['inhA','iniB','embB','promoter-fabG1-inhA','promoter-ahpC','ahpC','promoter-embA-embB','kasA','katG'],
+	'FQ':['gyrB','gryA'],
+	'SLIS':['rrs','inter-eis-Rv2417'],
+	'RIF':['rpoB']
+}
+
 
 
