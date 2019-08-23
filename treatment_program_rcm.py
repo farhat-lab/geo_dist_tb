@@ -191,7 +191,6 @@ class commercial_WGS_tester():
 
 	def perform_analysis(self,combined, check, raw_result_file_name):
 
-		memoization = {}
 		count = 0
 		result = pd.DataFrame(columns=['strain','drug','mutation','resistant','susceptible','synonymous','asynonymous'])
 
@@ -204,29 +203,23 @@ class commercial_WGS_tester():
 				for line in vcf.readlines()[1:]:
 					mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
 
-					if(mutation in memoization):
-						if(memoization[mutation]):
-							result = result.append(memoization[mutation], ignore_index=True)
-					else:
-						commercial, drug = check(self.break_down_mutation(line))
-						if(commercial):
-							#Make sure the strain has data for that drug
-							if(combined[combined['strain'] == strain][drug].item != -1):
-								if(combined[combined['strain'] == strain][drug].item != 1):
-									if(commercial == 'synonymous'):
-										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0}
-									elif(commercial == 'asynonymous'):
-										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1}
-								else:
-									if(commercial == 'synonymous'):
-										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0}
-									elif(commercial == 'asynonymous'):
-										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
-								memoization[mutation] = to_append
-								result = result.append(to_append, ignore_index=True)
-								print(to_append)
-						else:
-							memoization[mutation] = False
+					commercial, drug = check(self.break_down_mutation(line))
+					if(commercial):
+						#Make sure the strain has data for that drug
+						if(combined[combined['strain'] == strain][drug].item != -1):
+							if(combined[combined['strain'] == strain][drug].item != 1):
+								if(commercial == 'synonymous'):
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0}
+								elif(commercial == 'asynonymous'):
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1}
+							else:
+								if(commercial == 'synonymous'):
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0}
+								elif(commercial == 'asynonymous'):
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
+							memoization[mutation] = to_append
+							result = result.append(to_append, ignore_index=True)
+							print(to_append)
 
 		result.to_csv(raw_result_file_name,sep='\t')
 		return result
