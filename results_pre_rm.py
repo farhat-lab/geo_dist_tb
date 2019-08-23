@@ -474,8 +474,10 @@ def old_resistance():
 	def countries(drug):
 		country_counts = dates[dates['drug'] == drug].groupby('country').count().reset_index()
 		country_counts = dict(zip(country_counts.country, country_counts.strain))
-		oldrugCountrydenom = len(set([i for i in dates[(dates['drug'] == drug)]['country'].values if country_counts[i] > 10]))
-		oldrugnum = len(set([i for i in dates[(dates['drug'] == drug)&(dates['date'] >= 20)]['country'].values if country_counts[i] > 10]))
+		#oldrugCountrydenom = len(set([i for i in dates[(dates['drug'] == drug)]['country'].values if country_counts[i] > 10]))
+		#oldrugnum = len(set([i for i in dates[(dates['drug'] == drug)&(dates['date'] >= 20)]['country'].values if country_counts[i] > 10]))
+		oldrugCountrydenom = len(set([i for i in dates[(dates['drug'] == drug)]['country'].values]))
+		oldrugnum = len(set([i for i in dates[(dates['drug'] == drug)&(dates['date'] >= 20)]['country'].values]))
 		return oldrugCountrydenom, oldrugnum
 
 	oldRifCountrydenom, oldRifnum = countries('RIF')
@@ -484,6 +486,8 @@ def old_resistance():
 	print("Percentage of old RIF {}, {}/{})".format(oldRifnum, oldRifnum, oldRifCountrydenom))
 	print("Percentage of old INH {}, {}/{})".format(oldINHnum, oldINHnum, oldINHCountrydenom))
 	print("Percentage of old FLQ {}, {}/{})".format(oldFLQnum, oldFLQnum, oldFLQCountrydenom))
+
+old_resistance()
 
 def geographic_distribution_MRSCA_comparison():
 	dates = df.copy()

@@ -213,7 +213,7 @@ drug_to_COMregion = {
 }
 
 drug_to_COMposition = {
-	'INH':{'katG':315, 'promoter-fabG1-inhA':[15,16,8]},
+	'INH':{'katG':[315], 'promoter-fabG1-inhA':[15,16,8]},
 	'FQ': {'gyrA':[89,90,91,92,93,94],'gyrB':list(range(500,542))},
 	'SLIS':{'rrs':[1401,1402],'inter-eis-Rv2417c':[10,11,12,13,14,37]},
 	'RIF':{'rpoB':list(range(424,455))}

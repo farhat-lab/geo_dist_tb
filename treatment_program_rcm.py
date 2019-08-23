@@ -92,7 +92,7 @@ class commercial_WGS_tester():
 		if(gene_name == 'katG' and codon_position == 315):
 			drug = 'ISONIAZID'
 			return_variable = True
-		elif('inhA' in gene_name and codon_position in [15, 16,8]):
+		elif(gene_name = 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
 			drug = 'ISONIAZID'
 			return_variable = True
 		elif(gene_name == 'rpoB' and codon_position in list(range(424,453))):
