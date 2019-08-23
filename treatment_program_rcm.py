@@ -93,7 +93,7 @@ class commercial_WGS_tester():
 		elif(gene_name == 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
 			drug = 'ISONIAZID'
 			return_variable = True
-		elif(gene_name == 'rpoB' and codon_position in list(range(424,453))):
+		elif(gene_name == 'rpoB' and codon_position in list(range(424,454))):
 			drug = 'RIF'
 			return_variable = True
 		elif(gene_name == 'rrs' and codon_position in [1401,1402]):
@@ -107,7 +107,7 @@ class commercial_WGS_tester():
 			drug = 'FQ'
 			return_variable = True
 		#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
-		elif(gene_name == 'gyrB' and codon_position in list(range(500,541))):
+		elif(gene_name == 'gyrB' and codon_position in list(range(500,542))):
 			drug = 'FQ'
 			return_variable = True
 		#So here if its a LSP 
@@ -243,7 +243,7 @@ class commercial_WGS_tester():
 def main():
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown')
 	tester.perform_commercial_test()
-	# tester.perform_WGS_test()
+	tester.perform_WGS_test()
 
 
 if __name__ == "__main__":
