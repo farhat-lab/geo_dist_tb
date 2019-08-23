@@ -55,9 +55,7 @@ class commercial_WGS_tester():
 			type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 			if('inter-eis-Rv2417c' in gene_name):
 				#since original position relative to Rv2451c and not eis
-				print("YAHOOO")
-				codon_position = (type_change_info[2] - 2715332)*(-1)
-				print(codon_position)
+				codon_position = str((int(type_change_info[2]) - 2715332)*(-1))
 		elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 			gene_name, codonAA = type_change_info[5], type_change_info[4]
 			if('-' in codonAA):
@@ -120,7 +118,6 @@ class commercial_WGS_tester():
 		if(len(type_change) == 1 and return_variable):
 			return 'asynonymous', drug
 		if(return_variable and type_change[0] == type_change[1]):
-			print("WOHOOOOO!!!!")
 			return 'synonymous', drug
 		elif(return_variable and type_change[0] != type_change[1]):
 			return 'asynonymous', drug
