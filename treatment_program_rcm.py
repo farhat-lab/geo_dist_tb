@@ -17,6 +17,9 @@ class commercial_WGS_tester():
 		self.vcf_directory = vcf_directory
 		self.strain_info = self.setup(strain_info)
 
+	def __init__(self):
+		self.vcf_directory = None
+
 	def setup(self, strain_info_file):
 		"""DOING INITIAL SET UP OF FILES"""
 		strain_info = pd.read_csv(strain_info_file,sep='\t')
@@ -217,7 +220,7 @@ class commercial_WGS_tester():
 									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0}
 								elif(commercial == 'asynonymous'):
 									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
-									
+
 							result = result.append(to_append, ignore_index=True)
 							print(to_append)
 
