@@ -7,6 +7,11 @@ from treatment_program_rcm_helper import *
 
 
 class commercial_WGS_tester():
+	"""
+	Class that performs commercial and WGS test on isolates located in vcf directory
+
+
+	"""
 
 	def __init__(self, vcf_directory, strain_info, results_modified_unknown):
 		self.vcf_directory = vcf_directory
@@ -22,7 +27,7 @@ class commercial_WGS_tester():
 		strain_info = annotate(strain_info)
 
 		results_modified_unknown = pd.read_csv('results_modified_unknown',sep='\t')
-		strain_info = strain_info[strain_info['strains'].isin(results_modified_unknown['strains'].values)]
+		strain_info = strain_info[strain_info['strain'].isin(results_modified_unknown['strain'].values)]
 
 		return strain_info
 
@@ -184,7 +189,7 @@ class commercial_WGS_tester():
 		else:
 			return False, False
 
-	def perform_analysis(self,combined, check):
+	def perform_analysis(self,combined, check, raw_result_file_name):
 
 		memoization = {}
 		count = 0
@@ -203,7 +208,7 @@ class commercial_WGS_tester():
 						if(memoization[mutation]):
 							result = result.append(memoization[mutation])
 					else:
-						commercial, drug = check(break_down_mutation(line))
+						commercial, drug = check(self.break_down_mutation(line))
 						if(commercial):
 							#Make sure the strain has data for that drug
 							if(combined[combined['strain'] == strain][drug].item != -1):
@@ -218,11 +223,12 @@ class commercial_WGS_tester():
 									elif(commercial == 'asynonymous'):
 										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
 								memoization[mutation] = to_append
-								result = result.append(to_append)
+								result = result.append(to_append, ignore_index=True)
 								print(to_append)
 						else:
 							memoization[mutation] = False
 
+		result.to_csv(raw_result_file_name,sep='\t')
 		return result
 
 	def post_processing(self,result, name):
@@ -231,15 +237,15 @@ class commercial_WGS_tester():
 		print(result.columns)
 		result['count'] = 1
 		result = result[~result['mutation'].isin(lineage_snps)]
-		result = result.groupby(['drug','mutation']).sum().sort_values('drug',ascending=False).copy()
+		result = result.groupby(['drug','mutation']).sum().reset_index().sort_values('drug',ascending=False).copy()
 		result.to_csv(name, sep='\t')
 		return result
 
 	def perform_commercial_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant)), 'commercial_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results'), 'commercial_aggregated_test_results')
 
 	def perform_WGS_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant)), 'WGS_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results'), 'WGS_aggregated_test_results')
 
 
 def main():
