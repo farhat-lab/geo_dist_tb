@@ -72,8 +72,36 @@ class Test(unittest.TestCase):
 		duplication = COM.duplicated().values
 		self.assertTrue(True not in duplication, msg='If failed you have duplicate rows in COM_raw_test_results')
 
-	# def test_phenotype_WGS(self):
-	# 	"""Test to make sure all isolates'"'
+	def test_phenotype_WGS(self):
+		"""Test to make sure all isolates have correct phenotype"""
+		WGS = pd.read_csv('WGS_raw_test_results',sep='\t')
+		strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
+		for index, row in WGS.iterrows():
+			strain = row['strain']
+			drug = row['drug']
+			real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
+			if(float(row['resistant']) == 1.0):
+				self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
+			elif(float(row['susceptible']) == 1.0):
+				self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
+			else:
+				raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
+
+	def test_phenotype_COM(self):
+		"""Test to make sure all isolates have correct phenotype"""
+		COM = pd.read_csv('commercial_raw_test_results',sep='\t')
+		strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
+		for index, row in COM.iterrows():
+			strain = row['strain']
+			drug = row['drug']
+			real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
+			if(float(row['resistant']) == 1.0):
+				self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
+			elif(float(row['susceptible']) == 1.0):
+				self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
+			else:
+				raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
+
 
 
 if __name__ == '__main__':

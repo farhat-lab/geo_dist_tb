@@ -55,7 +55,7 @@ class commercial_WGS_tester():
 			type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 			if('inter-eis-Rv2417c' in gene_name):
 				#since original position relative to Rv2451c and not eis
-				codon_position = str((int(type_change_info[2]) - 2715332)*(-1))
+				codon_position = str((int(type_change_info[2]) - 2715332))
 		elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']):
 			gene_name, codonAA = type_change_info[5], type_change_info[4]
 			if('-' in codonAA):
@@ -197,7 +197,7 @@ class commercial_WGS_tester():
 			count += 1
 			print("{}\t{}".format(count, len(list(combined['strain'].values))))
 			#Only look at strains with data
-			if(combined[combined['strain'] == strain]['NO_DATA'].item != 1):
+			if(combined[combined['strain'] == strain]['NO_DATA'].item() != 1):
 				vcf = open(self.vcf_directory+'/'+strain+'.var','r')
 				for line in vcf.readlines()[1:]:
 					mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
@@ -205,8 +205,8 @@ class commercial_WGS_tester():
 					commercial, drug = check(self.break_down_mutation(line))
 					if(commercial):
 						#Make sure the strain has data for that drug
-						if(combined[combined['strain'] == strain][drug].item != -1):
-							if(combined[combined['strain'] == strain][drug].item != 1):
+						if(combined[combined['strain'] == strain][drug].item() != -1):
+							if(combined[combined['strain'] == strain][drug].item() != 1):
 								if(commercial == 'synonymous'):
 									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0}
 								elif(commercial == 'asynonymous'):
