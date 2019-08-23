@@ -207,7 +207,7 @@ drug_to_WGSregion = {
 
 drug_to_COMregion = {
 	'INH':['katG','promoter-fabG1-inhA'],
-	'FQ':['gryA','gyrB'],
+	'FQ':['gyrA','gyrB'],
 	'SLIS':['rrs','inter-eis-Rv2417c'],
 	'RIF':['rpoB']
 }

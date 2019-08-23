@@ -92,7 +92,7 @@ class commercial_WGS_tester():
 		if(gene_name == 'katG' and codon_position == 315):
 			drug = 'ISONIAZID'
 			return_variable = True
-		elif(gene_name = 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
+		elif(gene_name == 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
 			drug = 'ISONIAZID'
 			return_variable = True
 		elif(gene_name == 'rpoB' and codon_position in list(range(424,453))):
@@ -105,7 +105,7 @@ class commercial_WGS_tester():
 			drug = 'SLIS'
 			return_variable = True
 		#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
-		elif(gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
+		elif(gene_name == 'gyrA' and codon_position in [89,90,91,92,93,94]):
 			drug = 'FQ'
 			return_variable = True
 		#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
@@ -246,7 +246,7 @@ class commercial_WGS_tester():
 def main():
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown')
 	tester.perform_commercial_test()
-	tester.perform_WGS_test()
+	# tester.perform_WGS_test()
 
 
 if __name__ == "__main__":
