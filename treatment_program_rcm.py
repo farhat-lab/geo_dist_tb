@@ -206,7 +206,7 @@ class commercial_WGS_tester():
 
 					if(mutation in memoization):
 						if(memoization[mutation]):
-							result = result.append(memoization[mutation]m ignore_index=True)
+							result = result.append(memoization[mutation], ignore_index=True)
 					else:
 						commercial, drug = check(self.break_down_mutation(line))
 						if(commercial):
