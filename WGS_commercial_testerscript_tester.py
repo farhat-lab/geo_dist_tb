@@ -3,7 +3,7 @@ from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
 
-break_down_mutation = lambda gene: commercial_WGS_tester().break_down_mutation(gene)
+break_down_mutation = lambda gene: commercial_WGS_tester('ugh','ugh','ugh',ignore=True).break_down_mutation(gene)
 
 class Test(unittest.TestCase):
 

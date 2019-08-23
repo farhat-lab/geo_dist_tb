@@ -13,12 +13,10 @@ class commercial_WGS_tester():
 
 	"""
 
-	def __init__(self, vcf_directory, strain_info, results_modified_unknown):
-		self.vcf_directory = vcf_directory
-		self.strain_info = self.setup(strain_info)
-
-	def __init__(self):
-		self.vcf_directory = None
+	def __init__(self, vcf_directory, strain_info, results_modified_unknown, ignore=False):
+		if(not ignore):
+			self.vcf_directory = vcf_directory
+			self.strain_info = self.setup(strain_info)
 
 	def setup(self, strain_info_file):
 		"""DOING INITIAL SET UP OF FILES"""
