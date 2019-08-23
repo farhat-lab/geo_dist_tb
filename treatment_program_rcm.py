@@ -53,7 +53,7 @@ class commercial_WGS_tester():
 			#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
 			gene_name, codonAA = type_change_info[4], type_change_info[3]
 			type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-			if('inter-Rv2451c-eis' in gene_name):
+			if('inter-eis-Rv2417c' in gene_name):
 				#since original position relative to Rv2451c and not eis
 				print("YAHOOO")
 				codon_position = (type_change_info[2] - 2715332)*(-1)
