@@ -1,5 +1,5 @@
 import unittest
-from treatment_program_rcm_helper import drug_to_region, Variant
+from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
 
@@ -11,16 +11,17 @@ class Test(unittest.TestCase):
 		"""Tests if WGS regions are only those that we wanted to search and that all are represented"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
 
-
 		#Get regions detected by WGS test
-		mutations = WGS['mutation'].values
-		regions = [[i, break_down_mutation(i).gene_name, break_down_mutation(i).drug] for i in mutations]
+		mutations = WGS[['mutation','drug']].values
+		regions = [[mutation, break_down_mutation(mutation).gene_name, drug] for mutation, drug in mutations]
 
 		#Now make sure no region that we found was not in list and build list of regions we found
 		regions_found = {'INH':set(), 'FQ':set(),'SLIS':set(),'RIF':set()}
 		for mutation, region, drug in regions:
+			if(drug == 'ISONIAZID'):
+				drug = 'INH'
 			regions_look = drug_to_WGSregion[drug]
-			self.assertTrue(region in regions_look, msg = 'If failed it failed with {}'.format(mutation))
+			self.assertTrue(region in regions_look, msg = 'If failed it failed with {} not in {} for {} and drug {} '.format(region, regions_look, mutation, drug))
 			regions_found[drug].add(region)
 
 		#Check we found all regions, we are not missing any regions
@@ -28,34 +29,36 @@ class Test(unittest.TestCase):
 			what_we_found = list(regions_found[drug])
 			what_we_should_found = drug_to_WGSregion[drug]
 			for region in what_we_should_found:
-				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region'.format(region))
+				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region for drug {}'.format(region, drug))
 
 
 	def test_regions_locations_commercial(self):
-		"""Tests if WGS regions are only those that we wanted to search and that all are represented"""
+		"""Tests if commercial regions are only those that we wanted to search and that all are represented"""
 		COM = pd.read_csv('commercial_aggregated_test_results',sep='\t')
 
 
-		#Get regions detected by WGS test
-		mutations = COM['mutation'].values
-		regions = [[i, break_down_mutation(i).gene_name, break_down_mutation(i).drug, break_down_mutation(i).codon_location] for i in mutations]
+		#Get regions detected by commercial test
+		mutations = COM[['mutation','drug']].values
+		regions = [[mutation, break_down_mutation(mutation).gene_name, drug, break_down_mutation(mutation).codon_location] for mutation, drug in mutations]
 
 		#Now make sure no region that we found was not in list or not in position of interest and build list of regions we found
 		regions_found = {'INH':set(), 'FQ':set(),'SLIS':set(),'RIF':set()}
 		for mutation, region, drug, position in regions:
+			if(drug == 'ISONIAZID'):
+				drug = 'INH'
 			regions_look = drug_to_COMregion[drug]
-			self.assertTrue(region in regions_look, msg = 'If failed it failed with {}'.format(mutation))
+			self.assertTrue(region in regions_look, msg = 'If failed it failed with {} not in {} for {} and drug {} '.format(region, regions_look, mutation, drug))
 			regions_found[drug].add(region)
 
 			position_look = drug_to_COMposition[drug][region]
-			self.assertTrue(position in position_look, msg = 'If failed it failed with {} not in {} for {} drug and {} region'.format(position, position_look, drug, region))
+			self.assertTrue(int(position) in position_look, msg = 'If failed it failed with {} not in {} for {} drug and {} region'.format(position, position_look, drug, region))
 
 		#Check we found all regions, we are not missing any regions
 		for drug in ['INH','FQ','SLIS','RIF']:
 			what_we_found = list(regions_found[drug])
 			what_we_should_found = drug_to_COMregion[drug]
 			for region in what_we_should_found:
-				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region'.format(region))
+				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region for drug {}'.format(region, drug))
 
 	def test_raw_duplicates_WGS(self):
 		"""Test if have any duplicate entires in WGS raw results"""
@@ -64,8 +67,8 @@ class Test(unittest.TestCase):
 		self.assertTrue(True not in duplication, msg='If failed you have duplicate rows in WGS_raw_test_results')
 
 	def test_raw_duplicates_COM(self):
-		"""Test if have any duplicate entires in COM raw results"""
-		COM = pd.read_csv('COM_raw_test_results',sep='\t')
+		"""Test if have any duplicate entires in commercial raw results"""
+		COM = pd.read_csv('commercial_raw_test_results',sep='\t')
 		duplication = COM.duplicated().values
 		self.assertTrue(True not in duplication, msg='If failed you have duplicate rows in COM_raw_test_results')
 

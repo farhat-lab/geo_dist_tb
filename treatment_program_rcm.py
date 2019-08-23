@@ -103,7 +103,7 @@ class commercial_WGS_tester():
 		elif(gene_name == 'rrs' and codon_position in [1401,1402]):
 			drug = 'SLIS'
 			return_variable = True
-		elif(gene_name != 'eis' and 'eis' in gene_name and  codon_position in [10,11,12,13,14,37]):
+		elif(gene_name == 'inter-eis-Rv2417c' and  codon_position in [10,11,12,13,14,37]):
 			drug = 'SLIS'
 			return_variable = True
 		#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
@@ -157,8 +157,9 @@ class commercial_WGS_tester():
 		condition_six = 'promoter-ahpC' == gene
 		condition_seven = 'kasA' == gene
 		condition_eight = 'katG' == gene 
+		condition_nine = 'promoter-embA-embB' == gene
 
-		return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight
+		return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight or condition_nine
 
 	def check_variant_WGS(self,variant):
 		gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
