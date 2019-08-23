@@ -217,7 +217,7 @@ class commercial_WGS_tester():
 									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0}
 								elif(commercial == 'asynonymous'):
 									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
-							memoization[mutation] = to_append
+									
 							result = result.append(to_append, ignore_index=True)
 							print(to_append)
 
