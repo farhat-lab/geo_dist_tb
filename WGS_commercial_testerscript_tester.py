@@ -74,35 +74,35 @@ class Test(unittest.TestCase):
 		duplication = COM.duplicated().values
 		self.assertTrue(True not in duplication, msg='If failed you have duplicate rows in COM_raw_test_results')
 
-	def test_phenotype_WGS(self):
-		"""Test to make sure all isolates have correct phenotype"""
-		WGS = pd.read_csv('WGS_raw_test_results',sep='\t')
-		strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
-		for index, row in WGS.iterrows():
-			strain = row['strain']
-			drug = row['drug']
-			real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
-			if(float(row['resistant']) == 1.0):
-				self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
-			elif(float(row['susceptible']) == 1.0):
-				self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
-			else:
-				raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
+	# def test_phenotype_WGS(self):
+	# 	"""Test to make sure all isolates have correct phenotype"""
+	# 	WGS = pd.read_csv('WGS_raw_test_results',sep='\t')
+	# 	strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
+	# 	for index, row in WGS.iterrows():
+	# 		strain = row['strain']
+	# 		drug = row['drug']
+	# 		real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
+	# 		if(float(row['resistant']) == 1.0):
+	# 			self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
+	# 		elif(float(row['susceptible']) == 1.0):
+	# 			self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
+	# 		else:
+	# 			raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
 
-	def test_phenotype_COM(self):
-		"""Test to make sure all isolates have correct phenotype"""
-		COM = pd.read_csv('commercial_raw_test_results',sep='\t')
-		strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
-		for index, row in COM.iterrows():
-			strain = row['strain']
-			drug = row['drug']
-			real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
-			if(float(row['resistant']) == 1.0):
-				self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
-			elif(float(row['susceptible']) == 1.0):
-				self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
-			else:
-				raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
+	# def test_phenotype_COM(self):
+	# 	"""Test to make sure all isolates have correct phenotype"""
+	# 	COM = pd.read_csv('commercial_raw_test_results',sep='\t')
+	# 	strain_info = annotate(pd.read_csv('strain_info.tsv',sep='\t'))
+	# 	for index, row in COM.iterrows():
+	# 		strain = row['strain']
+	# 		drug = row['drug']
+	# 		real_phenotype = strain_info[strain_info['strain'] == strain][drug].item()
+	# 		if(float(row['resistant']) == 1.0):
+	# 			self.assertTrue(real_phenotype == 1, msg = '{} was annotated resistant but not actually resistant annotated as {}'.format(strain, real_phenotype))
+	# 		elif(float(row['susceptible']) == 1.0):
+	# 			self.assertTrue(real_phenotype == 0, msg = '{} was annotated susceptible but not actually susceptible annotated as {}'.format(strain, real_phenotype))
+	# 		else:
+	# 			raise Exception("Isolate {} is neither resistant or susceptible to drug {} ".format(strain, drug))
 
 	def test_classifier_COM_SLIS(self):
 		"""Test commercial classifier to see if it can detect positive and negative for SLI commercial mutations"""
@@ -126,10 +126,17 @@ class Test(unittest.TestCase):
 							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(37+2715332), ['asynonymous','SLIS']],
 							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(37+2715332), ['synonymous','SLIS']],
 							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(38+2715332), [False, False]],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(9+2715332), [False, False]]
-							]:
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(9+2715332), [False, False]],
+							['LSP_CN_410008_TTGG1401-1402G_VGQA1401-1402VGA_rrs', ['asynonymous', 'SLIS']],
+							['LSP_CN_410008_TTGG1401-1405G_VGQA1401-1402GA_rrs', ['asynonymous', 'SLIS']],
+							['LSP_CN_410008_TTGG1390-1405G_VGQA1390-1405VGA_rrs', ['asynonymous', 'SLIS']],
+							['LSP_CN_410008_TTGG1390-1400G_VGQA1390-1400VGA_rrs', [False, False]],
+							['DEL_P_4243204_d1401CT_rrs', ['asynonymous', 'SLIS']],
+							['DEL_P_4243204_d1399CT_rrs', [False, False]],
+							['INS_CF_2154110_i2002T_668L_rrs',[False, False]],
+							['INS_CF_2154110_i1401T_668L_rrs',['asynonymous', 'SLIS']]]:
 			result = classify_COM_mutation(test)
-			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify reported as {}'.format(test, result))
+			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test,expected, result))
 
 	def test_classifier_COM_FQ(self):
 		"""Test commercial classifier to see if it can detect positive and negative for FLQ commercial mutations"""
