@@ -55,7 +55,7 @@ class commercial_WGS_tester():
 			if('-' in codonNT):
 				type_change, codon_position = re.sub('\d+[-]+\d+','-', codonNT), re.findall('\d+[-]+\d+', codonNT)[0]
 			else:
-				type_change,codon_position = codonNT[0]+codonNT[len(codonNT)-1], codonAA[1:len(codonNT)-1]
+				type_change,codon_position = codonNT[0]+codonNT[len(codonNT)-1], codonNT[1:len(codonNT)-1]
 			if('inter-eis-Rv2417c' in gene_name):
 				#since original position relative to Rv2451c and not eis
 				codon_position = str((int(type_change_info[2]) - 2715332))
@@ -119,6 +119,7 @@ class commercial_WGS_tester():
 				return_variable = True
 		else:
 			#LSP deals with ranges so we see if the range intersects
+			codon_position = codon_position.replace('--','-')
 			start_codon_position = int(codon_position.split('-')[0])
 			end_codon_position = int(codon_position.split('-')[1])
 			#Note negative signs are just positive
