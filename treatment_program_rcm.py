@@ -49,20 +49,20 @@ class commercial_WGS_tester():
 			type_change_info = data
 		# print(data)	
 
-		if(type_change_info[0] == 'SNP' and type_change_info[1] in ['I','P','N']):
+		if(type_change_info[0] == 'SNP' and type_change_info[1] in ['I','P','N'] and '-' not in line):
 			#No real AA change info in this one with ones like SNP_I_2713795_C329T_inter-Rv2415c-eis
 			gene_name, codonAA = type_change_info[4], type_change_info[3]
 			type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 			if('inter-eis-Rv2417c' in gene_name):
 				#since original position relative to Rv2451c and not eis
 				codon_position = str((int(type_change_info[2]) - 2715332))
-		elif((type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']) or (type_change_info[0] == 'SNP' and '-' in line) ):
+		elif((type_change_info[0] == 'LSP' and type_change_info[1] in ['CN','CS']) or (type_change_info[0] == 'SNP' and type_change_info[1] in ['CN','CS'] and '-' in line) ):
 			gene_name, codonAA = type_change_info[5], type_change_info[4]
 			if('-' in codonAA):
 				type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
 			else:
 				type_change, codon_position = re.sub('\d+', '-', codonAA), re.findall('\d+', codonAA)[0]
-		elif(type_change_info[0] == 'LSP' and type_change_info[1] in ['I','CZ']):
+		elif((type_change_info[0] == 'LSP' and type_change_info[1] in ['I','CZ']) or (type_change_info[0] == 'SNP' and type_change_info[1] in ['I','CZ'] and '-' in line)):
 			gene_name, codonNT = type_change_info[4], type_change_info[3]
 			type_change, codon_position = re.sub('\d+[-]+\d+','-', codonNT), re.findall('\d+[-]+\d+', codonNT)[0]
 		elif(type_change_info[0] == 'SNP' ):
