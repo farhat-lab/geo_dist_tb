@@ -299,8 +299,10 @@ class commercial_WGS_tester():
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-
-			drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
+			else:
+				drug = None
+			if(drug):
+				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
 
 		def check_if_snp(self, mutation, drug):
 			for snp in drug_to_snp[drug]:
