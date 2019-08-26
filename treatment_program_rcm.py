@@ -13,11 +13,13 @@ class commercial_WGS_tester():
 
 	"""
 
-	def __init__(self, vcf_directory, strain_info, results_modified_unknown, ignore=False):
+	def __init__(self, vcf_directory, strain_info, results_modified_unknown,lineage_snp, snp, ignore=False):
 		if(not ignore):
 			self.vcf_directory = vcf_directory
 			self.strain_info = self.setup(strain_info)
-			self.check_lineage = self.generate_lineage_snp_checker()
+			self.check_lineage = self.generate_lineage_snp_checker(lineage_snp)
+			self.check_snp = self.generate_snp_checker(snp)
+
 
 	def setup(self, strain_info_file):
 		"""DOING INITIAL SET UP OF FILES"""
@@ -96,10 +98,10 @@ class commercial_WGS_tester():
 			#Note negative signs are just positive
 			return_variable = False
 			if(gene_name == 'katG' and codon_position == 315):
-				drug = 'ISONIAZID'
+				drug = 'INH'
 				return_variable = True
 			elif(gene_name == 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
-				drug = 'ISONIAZID'
+				drug = 'INH'
 				return_variable = True
 			elif(gene_name == 'rpoB' and codon_position in list(range(424,454))):
 				drug = 'RIF'
@@ -112,11 +114,11 @@ class commercial_WGS_tester():
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
 			elif(gene_name == 'gyrA' and codon_position in [89,90,91,92,93,94]):
-				drug = 'FQ'
+				drug = 'FLQ'
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
 			elif(gene_name == 'gyrB' and codon_position in list(range(500,542))):
-				drug = 'FQ'
+				drug = 'FLQ'
 				return_variable = True
 		else:
 			#LSP deals with ranges so we see if the range intersects
@@ -126,10 +128,10 @@ class commercial_WGS_tester():
 			#Note negative signs are just positive
 			return_variable = False
 			if(gene_name == 'katG' and (start_codon_position <= 315 <= end_codon_position)):
-				drug = 'ISONIAZID'
+				drug = 'INH'
 				return_variable = True
 			elif(gene_name == 'promoter-fabG1-inhA' and True in [ start_codon_position <= i <= end_codon_position for i in [15, 16,8]]):
-				drug = 'ISONIAZID'
+				drug = 'INH'
 				return_variable = True
 			elif(gene_name == 'rpoB' and True in [ start_codon_position <= i <= end_codon_position for i in list(range(424,454))]):
 				drug = 'RIF'
@@ -142,11 +144,11 @@ class commercial_WGS_tester():
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
 			elif(gene_name == 'gyrA' and True in [ start_codon_position <= i <= end_codon_position for i in [89,90,91,92,93,94]]):
-				drug = 'FQ'
+				drug = 'FLQ'
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
 			elif(gene_name == 'gyrB' and True in [ start_codon_position <= i <= end_codon_position for i in list(range(500,542))]):
-				drug = 'FQ'
+				drug = 'FLQ'
 				return_variable = True
 
 
@@ -203,7 +205,7 @@ class commercial_WGS_tester():
 		#Note negative signs are just positive
 		return_variable = False
 		if(self.check_INH(gene_name)):
-			drug = 'ISONIAZID'
+			drug = 'INH'
 			return_variable = True
 		elif(self.check_RIF(gene_name)):
 			drug = 'RIF'
@@ -212,7 +214,7 @@ class commercial_WGS_tester():
 			drug = 'SLIS'
 			return_variable = True
 		elif(self.check_FQ(gene_name)):
-			drug = 'FQ'
+			drug = 'FLQ'
 			return_variable = True
 
 		#So here if its a LSP 
@@ -228,7 +230,7 @@ class commercial_WGS_tester():
 		else:
 			return False, False
 
-	def perform_analysis(self,combined, check, raw_result_file_name, exclude_lineage):
+	def perform_analysis(self,combined, check, raw_result_file_name, exclude_lineage, include_only_snp):
 		count = 0
 		result = pd.DataFrame(columns=['strain','drug','mutation','resistant','susceptible','synonymous','asynonymous'])
 
@@ -246,6 +248,11 @@ class commercial_WGS_tester():
 					#Logic to exclude lineage mutations if needed to be detected
 					if(exclude_lineage):
 						if(self.check_lineage(broken_down_mutation)):
+							commercial = False
+
+					#Logic to include only 
+					if(commercial and include_only_snp):
+						if(not self.check_snp(broken_down_mutation, drug)):
 							commercial = False
 					
 					if(commercial):
@@ -269,21 +276,38 @@ class commercial_WGS_tester():
 		return result
 
 
-	def generate_lineage_snp_checker(self):
-		lineage_snps = [i for i in open('lineage_snp','r').readlines()]
+	def generate_lineage_snp_checker(self, lineage_snp_file_location):
+		#Generate function to check if a snp is a lineage snp
+		lineage_snps_processed = [self.break_down_mutation(i) for i in open(lineage_snp_file_location,'r').readlines()]
 
-		lineage_snps_processed = []
-		for lineage_snp in lineage_snps:
-				lineage_snps_processed.append(self.break_down_mutation(lineage_snp))
-
-		def check_if_lineage_snp(mutation):
+		def check_if_lineage_snp(self, mutation):
 			for lineage_snp in lineage_snps_processed:
-				if(lineage_snp.gene_name == mutation.gene_name and lineage_snp.codon_location == mutation.codon_location and lineage_snp.AA_change == mutation.AA_change):
+				if(lineage_snp.compare_variant_name_location_AAchange(mutation)):
 					print("Found a LINEAGE SNP")
 					return True 
 			return False
 
 		return check_if_lineage_snp
+
+
+	def generate_snp_checker(self, snp_file):
+		#Generate function to check if a snp is from list in AJRCCM paper
+		drug_to_snp = {'INH':[],'RIF':[],'SLIS':[],'FLQ':[]}
+		snps = [i.split('\t') for i in open(snp_file,'r').readlines()]
+		for drug, snp in snps:
+			if(drug == 'KAN' or drug == 'AMK' or drug == 'CAP'):
+				drug = 'SLIS'
+			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
+				drug = 'FLQ'
+
+			drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
+
+		def check_if_snp(self, mutation, drug):
+			for snp in drug_to_snp[drug]:
+				if(snp.compare_variant_name_location(mutation)):
+					return True
+			print("ooof good thing we did this we avoided a non AJRCCM snp")
+			return False
 
 	def post_processing(self,result, name, exclude_lineage):
 
@@ -327,7 +351,7 @@ class commercial_WGS_tester():
 			print("{} SUSCEPTIBLE PREDICTED {}/{} {}".format(drug, number_susceptible_predicted, number_susceptible, number_susceptible_predicted/number_susceptible))
 
 def main():
-	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp')
+	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
 	tester.perform_commercial_test()
 	tester.perform_WGS_test()
 	# print("COMMERCIAL STATS")

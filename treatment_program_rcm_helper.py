@@ -11,8 +11,11 @@ class Variant:
 			self.is_top = False
 		self.drug = drug
 		# print(test_name)
-	def compare_variant(self, variant):
+	def compare_variant_name_location_AAchange(self, variant):
 		return (self.gene_name == variant.gene_name) and (self.codon_location == variant.codon_location) and (self.AA_change == variant.AA_change)
+
+	def compare_variant_name_location(self, variant):
+		return (self.gene_name == variant.gene_name) and (self.codon_location == variant.codon_location) 
 
 	def __str__(self):
 		if(self.AA_change):
