@@ -321,10 +321,10 @@ class commercial_WGS_tester():
 
 
 	def perform_commercial_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results', 0), 'commercial_aggregated_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results', 0, 0), 'commercial_aggregated_test_results')
 
 	def perform_WGS_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results', 1), 'WGS_aggregated_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results', 1, 1), 'WGS_aggregated_test_results')
 
 	def calculate_statistics_commercial(self):
 		df = pd.read_csv('commercial_raw_test_results',sep='\t')
