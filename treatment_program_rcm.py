@@ -17,6 +17,7 @@ class commercial_WGS_tester():
 		if(not ignore):
 			self.vcf_directory = vcf_directory
 			self.strain_info = self.setup(strain_info)
+			self.check_lineage = self.generate_lineage_snp_checker()
 
 	def setup(self, strain_info_file):
 		"""DOING INITIAL SET UP OF FILES"""
@@ -227,8 +228,7 @@ class commercial_WGS_tester():
 		else:
 			return False, False
 
-	def perform_analysis(self,combined, check, raw_result_file_name):
-
+	def perform_analysis(self,combined, check, raw_result_file_name, exclude_lineage):
 		count = 0
 		result = pd.DataFrame(columns=['strain','drug','mutation','resistant','susceptible','synonymous','asynonymous'])
 
@@ -240,8 +240,14 @@ class commercial_WGS_tester():
 				vcf = open(self.vcf_directory+'/'+strain+'.var','r')
 				for line in vcf.readlines()[1:]:
 					mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
+					broken_down_mutation = self.break_down_mutation(line)
+					commercial, drug = check(broken_down_mutation)
 
-					commercial, drug = check(self.break_down_mutation(line))
+					#Logic to exclude lineage mutations if needed to be detected
+					if(exclude_lineage):
+						if(self.check_lineage(broken_down_mutation)):
+							commercial = False
+					
 					if(commercial):
 						#Make sure the strain has data for that drug
 						if(combined[combined['strain'] == strain][drug].item() != -1):
@@ -262,27 +268,72 @@ class commercial_WGS_tester():
 		result.to_csv(raw_result_file_name,sep='\t')
 		return result
 
-	def post_processing(self,result, name):
+
+	def generate_lineage_snp_checker(self):
 		lineage_snps = [i for i in open('lineage_snp','r').readlines()]
-		print(result)
-		print(result.columns)
+
+		lineage_snps_processed = []
+		for lineage_snp in lineage_snps:
+				lineage_snps_processed.append(self.break_down_mutation(lineage_snp))
+
+		def check_if_lineage_snp(mutation):
+			for lineage_snp in lineage_snps_processed:
+				if(lineage_snp.gene_name == mutation.gene_name and lineage_snp.codon_location == mutation.codon_location and lineage_snp.AA_change == mutation.AA_change):
+					print("Found a LINEAGE SNP")
+					return True 
+			return False
+
+		return check_if_lineage_snp
+
+	def post_processing(self,result, name, exclude_lineage):
+
 		result['count'] = 1
-		result = result[~result['mutation'].isin(lineage_snps)]
 		result = result.groupby(['drug','mutation']).sum().reset_index().sort_values('drug',ascending=False).copy()
 		result.to_csv(name, sep='\t')
+
 		return result
 
+
 	def perform_commercial_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results'), 'commercial_aggregated_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results', 0), 'commercial_aggregated_test_results')
 
 	def perform_WGS_test(self):
-		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results'), 'WGS_aggregated_test_results')
+		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results', 1), 'WGS_aggregated_test_results')
 
+	def calculate_statistics_commercial(self):
+		df = pd.read_csv('commercial_raw_test_results',sep='\t')
+		for drug in ['ISONIAZID','RIF','SLIS','FQ']:
+			number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
+			number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
+
+			
+			number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
+			number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
+
+			print("{} NUMBER RESISTANT NOT ABLE TO BE PREDICTED {}/{} {}".format(drug, number_resistant - number_resistant_predicted, number_resistant, 1-(number_resistant_predicted/number_resistant)))
+			print("{} SUSCEPTIBLE PREDICTED {}/{} {}".format(drug, number_susceptible_predicted, number_susceptible, number_susceptible_predicted/number_susceptible))
+
+	def calculate_statistics_WGS(self):
+		df = pd.read_csv('WGS_raw_test_results',sep='\t')
+		for drug in ['ISONIAZID','RIF','SLIS','FQ']:
+			number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
+			number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
+
+			
+			number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
+			number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
+
+			print("{} NUMBER RESISTANT NOT ABLE TO BE PREDICTED {}/{} {}".format(drug, number_resistant - number_resistant_predicted, number_resistant, 1-(number_resistant_predicted/number_resistant)))
+			print("{} SUSCEPTIBLE PREDICTED {}/{} {}".format(drug, number_susceptible_predicted, number_susceptible, number_susceptible_predicted/number_susceptible))
 
 def main():
-	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown')
+	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp')
 	tester.perform_commercial_test()
 	tester.perform_WGS_test()
+	# print("COMMERCIAL STATS")
+	# tester.calculate_statistics_commercial()
+	# print("WGS STATS \n\n\n\n")
+	# tester.calculate_statistics_WGS()
 
 
 if __name__ == "__main__":
