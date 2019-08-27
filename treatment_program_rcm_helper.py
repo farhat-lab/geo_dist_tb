@@ -206,21 +206,21 @@ drug_mapping = {
 
 drug_to_WGSregion = {
 	'INH':['inhA','iniB','embB','promoter-fabG1-inhA','promoter-ahpC','ahpC','promoter-embA-embB','kasA','katG'],
-	'FQ':['gyrB','gyrA'],
+	'FLQ':['gyrB','gyrA'],
 	'SLIS':['rrs','inter-eis-Rv2417c','tlyA'],
 	'RIF':['rpoB']
 }
 
 drug_to_COMregion = {
 	'INH':['katG','promoter-fabG1-inhA'],
-	'FQ':['gyrA','gyrB'],
+	'FLQ':['gyrA','gyrB'],
 	'SLIS':['rrs','inter-eis-Rv2417c'],
 	'RIF':['rpoB']
 }
 
 drug_to_COMposition = {
 	'INH':{'katG':[315], 'promoter-fabG1-inhA':[15,16,8]},
-	'FQ': {'gyrA':[89,90,91,92,93,94],'gyrB':list(range(500,542))},
+	'FLQ': {'gyrA':[89,90,91,92,93,94],'gyrB':list(range(500,542))},
 	'SLIS':{'rrs':[1401,1402],'inter-eis-Rv2417c':[10,11,12,13,14,37]},
 	'RIF':{'rpoB':list(range(424,455))}
 }

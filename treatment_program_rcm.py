@@ -280,7 +280,7 @@ class commercial_WGS_tester():
 		#Generate function to check if a snp is a lineage snp
 		lineage_snps_processed = [self.break_down_mutation(i) for i in open(lineage_snp_file_location,'r').readlines()]
 
-		def check_if_lineage_snp(self, mutation):
+		def check_if_lineage_snp(mutation):
 			for lineage_snp in lineage_snps_processed:
 				if(lineage_snp.compare_variant_name_location_AAchange(mutation)):
 					print("Found a LINEAGE SNP")
@@ -299,19 +299,20 @@ class commercial_WGS_tester():
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-			else:
+			elif(drug != 'INH' or drug != 'RIF'):
 				drug = None
 			if(drug):
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
 
-		def check_if_snp(self, mutation, drug):
+		def check_if_snp(mutation, drug):
 			for snp in drug_to_snp[drug]:
 				if(snp.compare_variant_name_location(mutation)):
 					return True
 			print("ooof good thing we did this we avoided a non AJRCCM snp")
 			return False
+		return check_if_snp
 
-	def post_processing(self,result, name, exclude_lineage):
+	def post_processing(self,result, name):
 
 		result['count'] = 1
 		result = result.groupby(['drug','mutation']).sum().reset_index().sort_values('drug',ascending=False).copy()

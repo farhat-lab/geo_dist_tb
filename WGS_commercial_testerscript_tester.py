@@ -2,7 +2,7 @@ import unittest
 from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
-commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh',ignore=True)
+commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh',ignore=True)
 
 break_down_mutation = lambda gene: commercial_WGS_tester.break_down_mutation(gene)
 classify_COM_mutation =  lambda gene: commercial_WGS_tester.check_variant_commercial(break_down_mutation(gene))
@@ -18,20 +18,45 @@ class Test(unittest.TestCase):
 		regions = [[mutation, break_down_mutation(mutation).gene_name, drug] for mutation, drug in mutations]
 
 		#Now make sure no region that we found was not in list and build list of regions we found
-		regions_found = {'INH':set(), 'FQ':set(),'SLIS':set(),'RIF':set()}
+		regions_found = {'INH':set(), 'FLQ':set(),'SLIS':set(),'RIF':set()}
 		for mutation, region, drug in regions:
 			if(drug == 'ISONIAZID'):
 				drug = 'INH'
+			if(drug == 'FQ'):
+				drug = 'FLQ'
 			regions_look = drug_to_WGSregion[drug]
 			self.assertTrue(region in regions_look, msg = 'If failed it failed with {} not in {} for {} and drug {} '.format(region, regions_look, mutation, drug))
 			regions_found[drug].add(region)
 
 		#Check we found all regions, we are not missing any regions
-		for drug in ['INH','FQ','SLIS','RIF']:
+		for drug in ['INH','FLQ','SLIS','RIF']:
 			what_we_found = list(regions_found[drug])
 			what_we_should_found = drug_to_WGSregion[drug]
 			for region in what_we_should_found:
 				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region for drug {}'.format(region, drug))
+
+	def test_AJRCCM_WGS(self):
+		"""Test to make sure no non-AJRCCM regions are present in WGS test results"""
+		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		mutations = [break_down_mutation(i) for i in WGS['mutation'].values]
+		processed_snps = []
+		snps = [i.split('\t') for i in open('snps','r').readlines()]
+		for drug, snp in snps:
+			if(drug == 'KAN' or drug == 'AMK' or drug == 'CAP'):
+				drug = 'SLIS'
+			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
+				drug = 'FLQ'
+			else:
+				drug = None
+			if(drug):
+				processed_snps.append(break_down_mutation(snp.rstrip()))
+
+		for mutation in mutations:
+			found = False
+			for snp in processed_snps:
+				if(snp.compare_variant_name_location(mutation)):
+					found = True
+			self.assertTrue(found, msg='{} not in AJRCCM region of interest'.format(mutation))
 
 
 	def test_regions_locations_commercial(self):
@@ -44,10 +69,12 @@ class Test(unittest.TestCase):
 		regions = [[mutation, break_down_mutation(mutation).gene_name, drug, break_down_mutation(mutation).codon_location] for mutation, drug in mutations]
 
 		#Now make sure no region that we found was not in list or not in position of interest and build list of regions we found
-		regions_found = {'INH':set(), 'FQ':set(),'SLIS':set(),'RIF':set()}
+		regions_found = {'INH':set(), 'FLQ':set(),'SLIS':set(),'RIF':set()}
 		for mutation, region, drug, position in regions:
 			if(drug == 'ISONIAZID'):
 				drug = 'INH'
+			if(drug == 'FQ'):
+				drug = 'FLQ'
 			regions_look = drug_to_COMregion[drug]
 			self.assertTrue(region in regions_look, msg = 'If failed it failed with {} not in {} for {} and drug {} '.format(region, regions_look, mutation, drug))
 			regions_found[drug].add(region)
@@ -56,7 +83,7 @@ class Test(unittest.TestCase):
 			self.assertTrue(int(position) in position_look, msg = 'If failed it failed with {} not in {} for {} drug and {} region'.format(position, position_look, drug, region))
 
 		#Check we found all regions, we are not missing any regions
-		for drug in ['INH','FQ','SLIS','RIF']:
+		for drug in ['INH','FLQ','SLIS','RIF']:
 			what_we_found = list(regions_found[drug])
 			what_we_should_found = drug_to_COMregion[drug]
 			for region in what_we_should_found:
@@ -138,16 +165,16 @@ class Test(unittest.TestCase):
 			result = classify_COM_mutation(test)
 			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test,expected, result))
 
-	def test_classifier_COM_FQ(self):
+	def test_classifier_COM_FLQ(self):
 		"""Test commercial classifier to see if it can detect positive and negative for FLQ commercial mutations"""
 		
 		tests = []
 
 		for i in range(500,542):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),['asynonymous','FQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),['asynonymous','FLQ']])
 
 		for i in range(500,542):
-			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrB'.format(i),['synonymous','FQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrB'.format(i),['synonymous','FLQ']])
 
 		for i in range(0,490):
 			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, False]])
@@ -156,10 +183,10 @@ class Test(unittest.TestCase):
 			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, False]])
 
 		for i in range(89,95):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),['asynonymous','FQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),['asynonymous','FLQ']])
 
 		for i in range(89,95):
-			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrA'.format(i),['synonymous','FQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrA'.format(i),['synonymous','FLQ']])
 
 		for i in range(0,88):
 			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),[False, False]])
@@ -196,23 +223,56 @@ class Test(unittest.TestCase):
 		"""Test commercial classifier to see if it can detect positive and negative for INH commercial mutations"""
 		
 		tests = []
-		tests.append(['SNP_CN_761141_C1335G_S315T_katG',['asynonymous','ISONIAZID']])
-		tests.append(['SNP_CN_761141_C1335G_S315S_katG',['synonymous','ISONIAZID']])
+		tests.append(['SNP_CN_761141_C1335G_S315T_katG',['asynonymous','INH']])
+		tests.append(['SNP_CN_761141_C1335G_S315S_katG',['synonymous','INH']])
 		tests.append(['SNP_CN_761141_C1335G_S314S_katG',[False, False]])
 		tests.append(['SNP_CN_761141_C1335G_S316S_katG',[False, False]])
 		tests.append(['SNP_CN_761141_C1335G_S400S_katG',[False, False]])
-		tests.append(['SNP_P_1673432_T8C_promoter-fabG1-inhA',['asynonymous','ISONIAZID']])
-		tests.append(['SNP_P_1673432_T8T_promoter-fabG1-inhA',['synonymous','ISONIAZID']])
-		tests.append(['SNP_P_1673432_T15C_promoter-fabG1-inhA',['asynonymous','ISONIAZID']])
-		tests.append(['SNP_P_1673432_T15T_promoter-fabG1-inhA',['synonymous','ISONIAZID']])
-		tests.append(['SNP_P_1673432_T16C_promoter-fabG1-inhA',['asynonymous','ISONIAZID']])
-		tests.append(['SNP_P_1673432_T16T_promoter-fabG1-inhA',['synonymous','ISONIAZID']])
+		tests.append(['SNP_P_1673432_T8C_promoter-fabG1-inhA',['asynonymous','INH']])
+		tests.append(['SNP_P_1673432_T8T_promoter-fabG1-inhA',['synonymous','INH']])
+		tests.append(['SNP_P_1673432_T15C_promoter-fabG1-inhA',['asynonymous','INH']])
+		tests.append(['SNP_P_1673432_T15T_promoter-fabG1-inhA',['synonymous','INH']])
+		tests.append(['SNP_P_1673432_T16C_promoter-fabG1-inhA',['asynonymous','INH']])
+		tests.append(['SNP_P_1673432_T16T_promoter-fabG1-inhA',['synonymous','INH']])
 		tests.append(['SNP_P_1673432_T17C_promoter-fabG1-inhA',[False, False]])
 		tests.append(['SNP_P_1673432_T13T_promoter-fabG1-inhA',[False, False]])
 
 		for test,expected in tests:
 			result = classify_COM_mutation(test)
 			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test, expected, result))
+
+	def test_exclude_lineage_from_WGS(self):
+		"""Test to see if WGS does not include any lineage snps"""
+		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		mutations = list(WGS['mutation'].values)
+		lineage_snps_processed = ['_'.join(i.rstrip().split('_')[-2:]) for i in open('lineage_snp','r').readlines()]
+		lineage_snps_unprocessed = [i.rstrip() for i in open('lineage_snp','r').readlines()]
+		for mutation in mutations:
+			for lineage_snp in lineage_snps_processed:
+				self.assertTrue(not (lineage_snp in mutation), msg = '{} lineage snp found in {}'.format(lineage_snp, mutation))
+
+
+		#make sure we added those extra snps
+		self.assertTrue('SNP_CN_2518919_G805A_G269S_kasA' in lineage_snps_unprocessed, msg = 'SNP_CN_2518919_G805A_G269S_kasA not found in lineage list')
+		self.assertTrue('SNP_CN_2726323_C131G_P44R_ahpC' in lineage_snps_unprocessed, msg = 'SNP_CN_2726323_C131G_P44R_ahpC not found in lineage list')
+		self.assertTrue('SNP_CN_2519048_G934A_G312S_kasA' in lineage_snps_unprocessed, msg = 'SNP_CN_2519048_G934A_G312S_kasA not found in lineage list')
+
+	def test_lineage_included_commercial(self):
+		"""Rest to make sure lineage snps are included in WGS results """
+		commercial = pd.read_csv('commercial_aggregated_test_results',sep='\t')
+		mutations = list(commercial['mutation'].values)
+		lineage_snps_processed = ['_'.join(i.rstrip().split('_')[-2:]) for i in open('lineage_snp','r').readlines()]
+		lineage_snps_unprocessed = [i.rstrip() for i in open('lineage_snp','r').readlines()]
+		found = False
+		for mutation in mutations:
+			for lineage_snp in lineage_snps_processed:
+				found = True
+
+		self.assertTrue(found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
+
+
+
+
 
 
 if __name__ == '__main__':
