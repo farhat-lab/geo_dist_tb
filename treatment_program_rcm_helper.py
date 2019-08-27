@@ -55,7 +55,7 @@ def annotate(df):
 		else:
 			return -1
 
-	df['FQ'] = df.apply(lambda row: FLUOROQUINOLONES(row),axis=1)
+	df['FLQ'] = df.apply(lambda row: FLUOROQUINOLONES(row),axis=1)
 
 	#Slis category requires that isolate be resistant to either kanamycin or amikacin or capreomycin
 	def SLIS(row):
@@ -114,9 +114,9 @@ def annotate(df):
 
 	#To be XDR the isolate has to be MDR and resistant to Fluoroquinolones and SLIS
 	def XDR(row):
-		if(row['MDR'] == 1 and row['FQ'] == 1 and row['SLIS'] == 1):
+		if(row['MDR'] == 1 and row['FLQ'] == 1 and row['SLIS'] == 1):
 			return 1
-		elif(row['MDR'] == -1 or row['FQ'] == -1 or row['SLIS'] == -1):
+		elif(row['MDR'] == -1 or row['FLQ'] == -1 or row['SLIS'] == -1):
 			return -1
 		else:
 			return 0
@@ -127,7 +127,7 @@ def annotate(df):
 	#To be susceptible the isolate has to have data on isoniazid and rif and then not have any data that shows it is resistant
 	def S(row):
 		if(row['ISONIAZID'] > -1 and row['RIF'] > -1):
-			if(row['ISONIAZID'] < 1 and row['RIF'] < 1 and row['FQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] < 1 and row['PYRAZINAMIDE'] < 1):
+			if(row['ISONIAZID'] < 1 and row['RIF'] < 1 and row['FLQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] < 1 and row['PYRAZINAMIDE'] < 1):
 				return 1
 			else:
 				return 0
@@ -140,7 +140,7 @@ def annotate(df):
 	#and susceptible to any other drug the isolate was tested for except strep where we allow it to be resistant to both INH and strep and still be INH mono
 	def INH_MONO(row):
 		if(row['ISONIAZID'] > -1 and row['RIF'] > -1):
-			if(row['ISONIAZID'] == 1 and row['RIF'] == 0 and row['FQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] <= 1 and row['PYRAZINAMIDE'] < 1):
+			if(row['ISONIAZID'] == 1 and row['RIF'] == 0 and row['FLQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] <= 1 and row['PYRAZINAMIDE'] < 1):
 				return 1
 			else:
 				return 0
@@ -152,7 +152,7 @@ def annotate(df):
 	#Similar logic to the INH Mono except now we require that is only be resistant to Strep and susceptible to all other drugs
 	def STREP_MONO(row):
 		if(row['ISONIAZID'] > -1 and row['RIF'] > -1):
-			if(row['ISONIAZID'] == 0 and row['RIF'] == 0 and row['FQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] == 1 and row['PYRAZINAMIDE'] < 1):
+			if(row['ISONIAZID'] == 0 and row['RIF'] == 0 and row['FLQ'] < 1 and row['SLIS'] < 1 and row['PAS'] < 1 and row['CYS'] < 1 and row['ETH'] < 1 and row['ETHAMBUTOL'] < 1 and row['STREPTOMYCIN'] == 1 and row['PYRAZINAMIDE'] < 1):
 				return 1
 			else:
 				return 0
@@ -164,7 +164,7 @@ def annotate(df):
 	#Similar logic to the previous 2 except now we check if the isolate is not INH mono, strep mono, xdr, or mdr and it is still resistant to some drug then it is other resistant
 	def OTHER_R(row):
 		if(row['ISONIAZID'] > -1 and row['RIF'] > -1):
-			if((row['INH_MONO'] < 1 and row['STR_MONO'] < 1 and row['XDR'] < 1 and row['MDR'] < 1 ) and (row['ISONIAZID'] == 1 or row['RIF'] == 1 or row['FQ'] == 1 or row['SLIS'] == 1 or row['PAS'] == 1 or row['CYS'] == 1 or row['ETH'] == 1 or row['ETHAMBUTOL'] == 1 or row['STREPTOMYCIN'] == 1 or row['PYRAZINAMIDE'] == 1)):
+			if((row['INH_MONO'] < 1 and row['STR_MONO'] < 1 and row['XDR'] < 1 and row['MDR'] < 1 ) and (row['ISONIAZID'] == 1 or row['RIF'] == 1 or row['FLQ'] == 1 or row['SLIS'] == 1 or row['PAS'] == 1 or row['CYS'] == 1 or row['ETH'] == 1 or row['ETHAMBUTOL'] == 1 or row['STREPTOMYCIN'] == 1 or row['PYRAZINAMIDE'] == 1)):
 				return 1
 			else:
 				return 0
