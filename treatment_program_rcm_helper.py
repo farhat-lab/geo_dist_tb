@@ -180,6 +180,9 @@ def annotate(df):
 		return 0
 
 	df['NO_DATA'] = df.apply(lambda row: NO_DATA(row),axis=1)
+
+	df = df.rename(columns={'ISONIAZID':'INH'})
+
 	return df.copy()
 
 
