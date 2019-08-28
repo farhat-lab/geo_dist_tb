@@ -258,7 +258,9 @@ class commercial_WGS_tester():
 						else:
 							extra_annotation = 'Table-10-snp'
 					elif(include_only_snp):
-						if(self.check_snp(broken_down_mutation, drug)):
+						result, drug = self.check_snp(broken_down_mutation)
+						if(result):
+							commercial = True
 							extra_annotation = 'AJRCCM'  
 					
 					if(commercial):
@@ -299,6 +301,7 @@ class commercial_WGS_tester():
 	def generate_snp_checker(self, snp_file):
 		#Generate function to check if a snp is from list in AJRCCM paper
 		drug_to_snp = {'INH':[],'RIF':[],'SLIS':[],'FLQ':[]}
+		snp_to_drug = {}
 		snps = [i.split('\t') for i in open(snp_file,'r').readlines()]
 		for drug, snp in snps:
 			if(drug == 'KAN' or drug == 'AMK' or drug == 'CAP'):
@@ -309,13 +312,21 @@ class commercial_WGS_tester():
 				drug = None
 			if(drug):
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
+				snp_to_drug[str(self.break_down_mutation(snp.rstrip()))] = drug
 
-		def check_if_snp(mutation, drug):
-			for snp in drug_to_snp[drug]:
-				if(snp.compare_variant_name_location(mutation)):
-					return True
-			print("ooof good thing we did this we avoided a non AJRCCM snp")
-			return False
+		def check_if_snp(mutation, drug=None):
+			if(drug):	
+				for snp in drug_to_snp[drug]:
+					if(snp.compare_variant_name_location(mutation)):
+						return True
+				return False
+			else:
+				for snp in drug_to_snp.values():
+					drug = snp_to_drug[str(mutation)]
+					if(snp.compare_variant_name_location(mutation)):
+						return True, drug
+				return False, False
+
 		return check_if_snp
 
 	def post_processing(self,result, name):
