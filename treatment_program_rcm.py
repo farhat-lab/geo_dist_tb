@@ -321,7 +321,7 @@ class commercial_WGS_tester():
 						return True
 				return False
 			else:
-				for snp in [item for sublist in i for i in drug_to_snp.values()]:
+				for snp in [item for sublist in drug_to_snp.values() for item in sublist]:
 					if(snp.compare_variant_name_location(mutation)):
 						drug = snp_to_drug[str(mutation)]
 						return True, drug
