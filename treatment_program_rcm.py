@@ -291,7 +291,6 @@ class commercial_WGS_tester():
 		def check_if_lineage_snp(mutation):
 			for lineage_snp in lineage_snps_processed:
 				if(lineage_snp.compare_variant_name_location_AAchange(mutation)):
-					print("{}\t{}\tFound a LINEAGE SNP".format(lineage_snp, mutation))
 					return True 
 			return False
 

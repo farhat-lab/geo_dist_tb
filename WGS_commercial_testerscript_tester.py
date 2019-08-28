@@ -61,6 +61,9 @@ class Test(unittest.TestCase):
 					found = True
 			self.assertTrue(found, msg='{} not in AJRCCM region of interest'.format(mutation))
 
+	def test_AJRCCM_labels(self):
+		"""Test to make sure all AJRCCM labels are labeled correctly/none are not labeled that should be labeled """
+
 
 	def test_regions_locations_commercial(self):
 		"""Tests if commercial regions are only those that we wanted to search and that all are represented"""

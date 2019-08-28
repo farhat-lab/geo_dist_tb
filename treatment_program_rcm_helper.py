@@ -18,11 +18,7 @@ class Variant:
 		return (self.gene_name == variant.gene_name) and (self.codon_location == variant.codon_location) 
 
 	def __str__(self):
-		if(self.AA_change):
-			return_string = self.AA_change+self.codon_location
-		else:
-			return_string = self.codon_location
-		return "{}_{}".format(self.gene_name, return_string)
+		return "{}_{}".format(self.gene_name, self.codon_location)
 
 def annotate(df):
 	"""
