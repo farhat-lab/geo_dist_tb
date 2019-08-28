@@ -322,8 +322,8 @@ class commercial_WGS_tester():
 				return False
 			else:
 				for snp in drug_to_snp.values():
-					drug = snp_to_drug[str(mutation)]
 					if(snp.compare_variant_name_location(mutation)):
+						drug = snp_to_drug[str(mutation)]
 						return True, drug
 				return False, False
 
@@ -372,7 +372,7 @@ class commercial_WGS_tester():
 
 def main():
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
-	tester.perform_commercial_test()
+	#tester.perform_commercial_test()
 	tester.perform_WGS_test()
 	# print("COMMERCIAL STATS")
 	# tester.calculate_statistics_commercial()
