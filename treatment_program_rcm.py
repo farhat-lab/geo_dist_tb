@@ -258,8 +258,8 @@ class commercial_WGS_tester():
 						else:
 							extra_annotation = 'Table-10-snp'
 					elif(include_only_snp):
-						result, drug = self.check_snp(broken_down_mutation)
-						if(result):
+						test_result, drug = self.check_snp(broken_down_mutation)
+						if(test_result):
 							commercial = True
 							extra_annotation = 'AJRCCM'  
 					
