@@ -232,9 +232,10 @@ class commercial_WGS_tester():
 
 	def perform_analysis(self,combined, check, raw_result_file_name, exclude_lineage, include_only_snp):
 		count = 0
-		result = pd.DataFrame(columns=['strain','drug','mutation','resistant','susceptible','synonymous','asynonymous'])
+		result = pd.DataFrame(columns=['strain','drug','mutation','resistant','susceptible','synonymous','asynonymous', 'extra_annotation'])
 
 		for strain in list(combined['strain'].values):
+			extra_annotation = 'None'
 			count += 1
 			print("{}\t{}".format(count, len(list(combined['strain'].values))))
 			#Only look at strains with data
@@ -252,22 +253,27 @@ class commercial_WGS_tester():
 
 					#Logic to include only 
 					if(commercial and include_only_snp):
-						if(not self.check_snp(broken_down_mutation, drug)):
-							commercial = False
+						if(self.check_snp(broken_down_mutation, drug)):
+							extra_annotation = 'AJRCCM/Table-10-snp'
+						else:
+							extra_annotation = 'Table-10-snp'
+					elif(include_only_snp):
+						if(self.check_snp(broken_down_mutation, drug)):
+							extra_annotation = 'AJRCCM'  
 					
 					if(commercial):
 						#Make sure the strain has data for that drug
 						if(combined[combined['strain'] == strain][drug].item() != -1):
 							if(combined[combined['strain'] == strain][drug].item() != 1):
 								if(commercial == 'synonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0}
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
 								elif(commercial == 'asynonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1}
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
 							else:
 								if(commercial == 'synonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0}
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
 								elif(commercial == 'asynonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1}
+									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
 
 							result = result.append(to_append, ignore_index=True)
 							print(to_append)

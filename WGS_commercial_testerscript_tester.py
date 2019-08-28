@@ -46,7 +46,7 @@ class Test(unittest.TestCase):
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-			else:
+			elif(drug != 'INH' and drug != 'RIF'):
 				drug = None
 			if(drug):
 				processed_snps.append(break_down_mutation(snp.rstrip()))
