@@ -308,7 +308,7 @@ class commercial_WGS_tester():
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-			elif(drug != 'INH' or drug != 'RIF'):
+			elif(drug != 'INH' and drug != 'RIF'):
 				drug = None
 			if(drug):
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))

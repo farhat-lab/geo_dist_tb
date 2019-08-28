@@ -2,10 +2,12 @@ import unittest
 from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
-commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh',ignore=True)
+
 
 break_down_mutation = lambda gene: commercial_WGS_tester.break_down_mutation(gene)
 classify_COM_mutation =  lambda gene: commercial_WGS_tester.check_variant_commercial(break_down_mutation(gene))
+commercial_WGS_tester_full = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
+commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh',ignore=True)
 
 class Test(unittest.TestCase):
 
@@ -38,6 +40,7 @@ class Test(unittest.TestCase):
 	def test_AJRCCM_WGS(self):
 		"""Test to make sure no non-AJRCCM regions are present in WGS test results"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		# WGS_AJRCCM = WGS[WGS['extra_annotation']]
 		mutations = [break_down_mutation(i) for i in WGS['mutation'].values]
 		processed_snps = []
 		snps = [i.split('\t') for i in open('snps','r').readlines()]
@@ -241,6 +244,16 @@ class Test(unittest.TestCase):
 			result = classify_COM_mutation(test)
 			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test, expected, result))
 
+	def test_classifier_WGS_INH(self):
+		"""Test WGS classifier to see if it can detect AJRCCM and table-10 mutations accurately"""
+		
+		tests = []
+		tests.append(['SNP_CN_761141_C1335G_S315T_katG',[True,'INH']])
+
+		for test,expected in tests:
+			result = commercial_WGS_tester_full.check_snp(break_down_mutation(test))
+			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test, expected, result))
+
 	def test_exclude_lineage_from_WGS(self):
 		"""Test to see if WGS does not include any lineage snps"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
@@ -269,6 +282,8 @@ class Test(unittest.TestCase):
 				found = True
 
 		self.assertTrue(found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
+
+
 
 
 
