@@ -77,7 +77,7 @@ class commercial_WGS_tester():
 				type_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
 			else:
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
-		elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N','NI','NZ','ND']):
+		elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','F','P','NF','N','NI','NZ','ND']):
 			gene_name, deletion = type_change_info[4], type_change_info[3]
 			if('i' not in deletion and 'd' not in deletion):
 				raise Exception('VARIANT {} does not have i or d which we assume is present'.format(line))

@@ -25,7 +25,7 @@ class Variant:
 				print("REAL FRAMESHIFT {}".format(self.original_snp))
 				return True
 		else:	
-			if(len(self.AA_change)%3 == 0):
+			if(len(self.AA_change) == 2):
 				print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
 				return False
 			else:
@@ -106,6 +106,39 @@ def annotate(df):
 			return -1
 
 	df['CYS'] = df.apply(lambda row: CYCLOSERINE(row),axis=1)
+
+	#Streptomycin category requires that isolates be resistant to streptomycin
+	def STREPTOMYCIN(row):
+		if( (row['STREPTOMYCIN'] == 1) ):
+			return 1
+		elif( (row['STREPTOMYCIN'] == 0) ):
+			return 0
+		else:
+			return -1
+
+	df['STR'] = df.apply(lambda row: STREPTOMYCIN(row),axis=1)
+
+	#Pyrazinamide category requires that isolates be resistant to pyrazinamide
+	def PYRAZINAMIDE(row):
+		if( (row['PYRAZINAMIDE'] == 1) ):
+			return 1
+		elif( (row['PYRAZINAMIDE'] == 0) ):
+			return 0
+		else:
+			return -1
+
+	df['PZA'] = df.apply(lambda row: PYRAZINAMIDE(row),axis=1)
+
+	#Ethambutol category requires that isolates be resistant to ethambutol
+	def ETHAMBUTOL(row):
+		if( (row['ETHAMBUTOL'] == 1) ):
+			return 1
+		elif( (row['ETHAMBUTOL'] == 0) ):
+			return 0
+		else:
+			return -1
+
+	df['EMB'] = df.apply(lambda row: ETHAMBUTOL(row),axis=1)
 
 	#Para-aminosalicyclic acid category requires that isolates be resistant to para-aminosalicylic acid
 	def PARA_AMINOSALICYLIC_ACID(row):
