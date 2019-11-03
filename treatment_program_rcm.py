@@ -442,8 +442,8 @@ class commercial_WGS_tester():
 			number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
 			number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
 
-			print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, number_resistant_predicted/number_resistant))
-			print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/number_susceptible)))
+			print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, float(number_resistant_predicted)/number_resistant))
+			print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 
 	def calculate_statistics_WGS(self):
 		total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
@@ -460,17 +460,17 @@ class commercial_WGS_tester():
 				number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
 				number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
 
-				print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, number_resistant_predicted/number_resistant))
-				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/number_susceptible)))
+				print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, float(number_resistant_predicted)/number_resistant))
+				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 
 def main():
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
 	#tester.perform_commercial_test()
-	# tester.perform_WGS_test()
+	tester.perform_WGS_test()
 	# tester.perform_commercial_post_processing()
-	# tester.perform_WGS_post_processing()
+	tester.perform_WGS_post_processing()
 	# tester.reclassify_raw_commercial()
-	# tester.reclassify_raw_WGS()
+	tester.reclassify_raw_WGS()
 	print("COMMERCIAL STATS")
 	tester.calculate_statistics_commercial()
 	print("WGS STATS \n\n\n\n")
