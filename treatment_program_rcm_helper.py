@@ -1,16 +1,37 @@
 class Variant:
 
-	def __init__(self, gene_name, codon_location, AA_change, name = None, test_name = None, drug = None):
+	def __init__(self, gene_name, codon_location, AA_change, original_snp, name = None, test_name = None, drug = None):
 		self.gene_name = gene_name
 		self.codon_location = codon_location
 		self.AA_change = AA_change
 		self.name = name
+		self.original_snp = original_snp
+		self.is_frameshift = self.check_frameshift()
+
 		if(test_name):
 			self.is_top = (drug+'_'+test_name) in snps_of_interest
 		else:
 			self.is_top = False
 		self.drug = drug
 		# print(test_name)
+
+	def check_frameshift(self):
+		if('-' in self.AA_change):
+			part_one, part_two = self.AA_change.split('-')
+			if(len(part_one) == len(part_two) or len(part_one)%3 == 0 and len(part_one)%3 == 0):
+				print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
+				return False
+			else:
+				print("REAL FRAMESHIFT {}".format(self.original_snp))
+				return True
+		else:	
+			if(len(self.AA_change)%3 == 0):
+				print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
+				return False
+			else:
+				print("REAL FRAMESHIFT {}".format(self.original_snp))
+				return True
+
 	def compare_variant_name_location_AAchange(self, variant):
 		return (self.gene_name == variant.gene_name) and (self.codon_location == variant.codon_location) and (self.AA_change == variant.AA_change)
 

@@ -79,14 +79,18 @@ class commercial_WGS_tester():
 				type_change,codon_position = codonAA[0]+codonAA[len(codonAA)-1], codonAA[1:len(codonAA)-1]
 		elif((type_change_info[0] == 'DEL' or type_change_info[0] == 'INS') and type_change_info[1] in ['I','P','NF','N','NI','NZ','ND']):
 			gene_name, deletion = type_change_info[4], type_change_info[3]
+			if('i' not in deletion and 'd' not in deletion):
+				raise Exception('VARIANT {} does not have i or d which we assume is present'.format(line))
 			codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 		elif(type_change_info[0] == 'DEL' or type_change_info[0] == 'INS'):
 			gene_name, deletion = type_change_info[5], type_change_info[3]
+			if('i' not in deletion and 'd' not in deletion):
+				raise Exception('VARIANT {} does not have i or d which we assume is present'.format(line))
 			codon_position, type_change = re.findall('\d+', deletion)[0], re.findall('[AGCT]+', deletion)[0]
 		else:
 			raise Exception('Unknown mutation format {}'.format(type_change_info))
 
-		return Variant(gene_name, codon_position, type_change, drug=drug)  
+		return Variant(gene_name, codon_position, type_change, line, drug=drug)  
 
 	# ###################SETTING UP COMMERCIAL/WGS TEST###########################
 
@@ -169,6 +173,15 @@ class commercial_WGS_tester():
 	def check_RIF(self,gene):
 		return 'rpoB' == gene
 
+	def check_STR(self, geme):
+		return ('gid' == gene) or ('rpsL' == gene) or ('rrs' == gene) or ('inter-rrs-rrl' == gene)
+
+	def check_PZA(self, gene):
+		return ('inter-pncA-Rv2044c' == gene) or ('pncA' == gene) or ('rpsA' == gene)
+
+	def check_EMB(self, gene):
+		return ('embA' == gene) or ('embB' == gene) or ('embC' == gene) or ('iniB' == gene) or ('inter-embC-embA' == gene)
+
 	def check_SLIS(self,gene):
 		#drugs in SLIS 'KANAMYCIN' 'AMIKACIN' 'CAPREOMYCIN'
 		#KAN genes: rrs, tlyA
@@ -215,6 +228,15 @@ class commercial_WGS_tester():
 			return_variable = True
 		elif(self.check_FQ(gene_name)):
 			drug = 'FLQ'
+			return_variable = True
+		elif(self.check_PZA(gene_name)):
+			drug = 'PZA'
+			return_variable = True
+		elif(self.check_EMB(gene_name)):
+			drug = 'EMB'
+			return_variable = True
+		elif(self.check_STR(gene_name)):
+			drug = 'STR'
 			return_variable = True
 
 		#So here if its a LSP 
@@ -279,6 +301,8 @@ class commercial_WGS_tester():
 
 							result = result.append(to_append, ignore_index=True)
 							print(to_append)
+		#RECLASSIFICATION
+		result = self.perform_reclassification(result)
 
 		result.to_csv(raw_result_file_name,sep='\t')
 		return result
@@ -299,7 +323,7 @@ class commercial_WGS_tester():
 
 	def generate_snp_checker(self, snp_file):
 		#Generate function to check if a snp is from list in AJRCCM paper
-		drug_to_snp = {'INH':[],'RIF':[],'SLIS':[],'FLQ':[]}
+		drug_to_snp = {'INH':[],'RIF':[],'SLIS':[],'FLQ':[], 'PZA':[], 'STR':[], 'EMB':[]}
 		snp_to_drug = {}
 		snps = [i.split('\t') for i in open(snp_file,'r').readlines()]
 		for drug, snp in snps:
@@ -307,7 +331,7 @@ class commercial_WGS_tester():
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-			elif(drug != 'INH' and drug != 'RIF'):
+			elif(drug != 'INH' and drug != 'RIF' and drug != 'PZA' and drug != 'STR' and drug != 'EMB'):
 				drug = None
 			if(drug):
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
@@ -328,14 +352,38 @@ class commercial_WGS_tester():
 
 		return check_if_snp
 
-	def post_processing(self,result, name):
+	def post_processing(self,result, name, recreate = False):
+		if(recreate):
+			result = pd.read_csv(recreate, sep='\t')
 
 		result['count'] = 1
-		result = result.groupby(['drug','mutation']).sum().reset_index().sort_values('drug',ascending=False).copy()
+		result = result.groupby(['drug','mutation', 'extra_annotation']).sum().reset_index().sort_values('drug',ascending=False).copy()
+		del result['Unnamed: 0']
 		result.to_csv(name, sep='\t')
 
 		return result
 
+	def perform_reclassification(self, result):
+		strains = list(set(result['strain'].values))
+		for strain in strains:
+			if(self.SLIFLQ_reclassification_required(strain, result)):
+				#We change all resistant to 0 and susceptible to 1 and type to "IGNORE" to ignore the mutation
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS', 'PZA','STR','EMB'])), 'resistant'] = 0
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','STR','EMB'])), 'susceptible'] = 1
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','STR','EMB'])), 'extra_annotation'] = 'IGNORE'
+				print("{} RECLASSIFYING".format(strain))
+			else:
+				print("{} IS GOOD".format(strain))
+
+		return result
+
+
+	def SLIFLQ_reclassification_required(self, strain, result):
+		drugs_present = list(set(result[result['strain'] == strain]['drug'].values))
+		#was the strain marked resistance to FLQ or SLI?
+		return not('INH' in drugs_present )  and not ('RIF' in drugs_present)
+		# if(result[(result['strain'] == strain)&(result['drug'] == 'FLQ')]['resistant'].sum().item() or result[(result['strain'] == strain)&(result['drug'] == 'SLIS')]['resistant'].sum().item()):
+		# 	return not ('INH' in drugs_present and 'RIF' in drugs_present)
 
 	def perform_commercial_test(self):
 		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_commercial(variant), 'commercial_raw_test_results', 0, 0), 'commercial_aggregated_test_results')
@@ -343,40 +391,92 @@ class commercial_WGS_tester():
 	def perform_WGS_test(self):
 		return self.post_processing(self.perform_analysis(self.strain_info, lambda variant: self.check_variant_WGS(variant), 'WGS_raw_test_results', 1, 1), 'WGS_aggregated_test_results')
 
+	def perform_commercial_post_processing(self):
+		return self.post_processing(None, 'commercial_aggregated_test_results', 'commercial_raw_test_results')
+
+	def perform_WGS_post_processing(self):
+		return self.post_processing(None, 'WGS_aggregated_test_results', 'WGS_raw_test_results')
+
+	def reclassify_raw_result(self, name):
+		result = pd.read_csv(name,sep='\t')
+		self.perform_reclassification(result).to_csv(name,sep='\t')
+		# self.perform_reclassification(result)
+
+	def reclassify_raw_commercial(self):
+		self.reclassify_raw_result('commercial_raw_test_results')
+
+	def reclassify_raw_WGS(self):
+		self.reclassify_raw_result('WGS_raw_test_results')
+
+	# def get_revised_strain_info_count(self, modified_raw_test_results, drug):
+	# 	"""After we revise phenotype of the isolates we need to count via strain info but make sure phenotype wasn't revised in our analysis"""
+	# 	resistant_count = 0
+	# 	susceptible_count = 0
+	# 	#First we cycle through all relevant strains for the drug that have data
+	# 	for strain in self.strain_info[self.strain_info[drug] != -1]['strain'].values:
+	# 		#If the strain is resistant to the drug
+	# 		if(self.strain_info[(self.strain_info['strain'] ==strain)][drug].item()):
+	# 			#We check if the strain is still resistant to that drug i.e. it wasn't reclassified
+	# 			if(modified_raw_test_results[(modified_raw_test_results['strain'] == strain)&(modified_raw_test_results['drug'] == drug)]['resistant'].sum().item()):
+	# 				#If this is true we up the resistant count
+	# 				resistant_count += 1
+	# 			else:
+	# 				#If this is not true we reclassified this as susceptible so we up the susceptible count
+	# 				susceptible_count += 1
+
+	# 	#Now we only reclassified resistant isolates, susceptible ones stayed the same so we we can just add the same as we used to do it
+	# 	susceptible_count += self.strain_info[self.strain_info[drug] == 0]['strain'].count()
+
+		# return resistant_count, susceptible_count
+
+
 	def calculate_statistics_commercial(self):
 		df = pd.read_csv('commercial_raw_test_results',sep='\t')
-		for drug in ['ISONIAZID','RIF','SLIS','FQ']:
+		df = df[df['extra_annotation'] != 'IGNORE']
+		for drug in ['INH','RIF','SLIS','FLQ']:
 			number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
 			number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
 
 			
+			# number_resistant, number_susceptible = self.get_revised_strain_info_count(df, drug)
 			number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
 			number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
 
-			print("{} NUMBER RESISTANT NOT ABLE TO BE PREDICTED {}/{} {}".format(drug, number_resistant - number_resistant_predicted, number_resistant, 1-(number_resistant_predicted/number_resistant)))
-			print("{} SUSCEPTIBLE PREDICTED {}/{} {}".format(drug, number_susceptible_predicted, number_susceptible, number_susceptible_predicted/number_susceptible))
+			print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, number_resistant_predicted/number_resistant))
+			print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/number_susceptible)))
 
 	def calculate_statistics_WGS(self):
-		df = pd.read_csv('WGS_raw_test_results',sep='\t')
-		for drug in ['ISONIAZID','RIF','SLIS','FQ']:
-			number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
-			number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
+		total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
+		total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
+		for annotation in ['Table-10-snp','AJRCCM']:
+			print("FOR FOLLOWING MUTATIONS IN {}".format(annotation))
+			df = total_df[total_df['extra_annotation'].str.contains(annotation)]
 
-			
-			number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
-			number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
+			for drug in ['INH','RIF','SLIS','FLQ', 'STR','PZA','EMB']:
+				number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
+				number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
 
-			print("{} NUMBER RESISTANT NOT ABLE TO BE PREDICTED {}/{} {}".format(drug, number_resistant - number_resistant_predicted, number_resistant, 1-(number_resistant_predicted/number_resistant)))
-			print("{} SUSCEPTIBLE PREDICTED {}/{} {}".format(drug, number_susceptible_predicted, number_susceptible, number_susceptible_predicted/number_susceptible))
+				# number_resistant, number_susceptible = self.get_revised_strain_info_count(df, drug)
+				number_resistant = self.strain_info[self.strain_info[drug] == 1]['strain'].count()
+				number_susceptible = self.strain_info[self.strain_info[drug] == 0]['strain'].count()
+
+				print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, number_resistant_predicted/number_resistant))
+				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/number_susceptible)))
 
 def main():
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
 	#tester.perform_commercial_test()
-	tester.perform_WGS_test()
-	# print("COMMERCIAL STATS")
-	# tester.calculate_statistics_commercial()
-	# print("WGS STATS \n\n\n\n")
-	# tester.calculate_statistics_WGS()
+	# tester.perform_WGS_test()
+	# tester.perform_commercial_post_processing()
+	# tester.perform_WGS_post_processing()
+	# tester.reclassify_raw_commercial()
+	# tester.reclassify_raw_WGS()
+	print("COMMERCIAL STATS")
+	tester.calculate_statistics_commercial()
+	print("WGS STATS \n\n\n\n")
+	tester.calculate_statistics_WGS()
+	
+	
 
 
 if __name__ == "__main__":

@@ -2,25 +2,26 @@ import unittest
 from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
-
-
-break_down_mutation = lambda gene: commercial_WGS_tester.break_down_mutation(gene)
-classify_COM_mutation =  lambda gene: commercial_WGS_tester.check_variant_commercial(break_down_mutation(gene))
 commercial_WGS_tester_full = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
 commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh',ignore=True)
+break_down_mutation = lambda gene: commercial_WGS_tester.break_down_mutation(gene)
+classify_COM_mutation =  lambda gene: commercial_WGS_tester.check_variant_commercial(break_down_mutation(gene))
+classify_WGS_mutation = lambda gene: commercial_WGS_tester.check_variant_WGS(gene)
+
 
 class Test(unittest.TestCase):
 
-	def test_regions_WGS(self):
-		"""Tests if WGS regions are only those that we wanted to search and that all are represented"""
+	def test_table_10_regions_WGS(self):
+		"""Tests if WGS regions in supplementary table 10 are only those that we wanted to search and that all are represented"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		WGS_AJRCCM = WGS[WGS['extra_annotation'].str.contains("Table-10-snp")]
 
 		#Get regions detected by WGS test
-		mutations = WGS[['mutation','drug']].values
+		mutations = WGS_AJRCCM[['mutation','drug']].values
 		regions = [[mutation, break_down_mutation(mutation).gene_name, drug] for mutation, drug in mutations]
 
 		#Now make sure no region that we found was not in list and build list of regions we found
-		regions_found = {'INH':set(), 'FLQ':set(),'SLIS':set(),'RIF':set()}
+		regions_found = {'INH':set(), 'FLQ':set(),'SLIS':set(),'RIF':set(), 'STR':set(),'EMB':set(),'PZA':set()}
 		for mutation, region, drug in regions:
 			if(drug == 'ISONIAZID'):
 				drug = 'INH'
@@ -31,17 +32,16 @@ class Test(unittest.TestCase):
 			regions_found[drug].add(region)
 
 		#Check we found all regions, we are not missing any regions
-		for drug in ['INH','FLQ','SLIS','RIF']:
+		for drug in ['INH','FLQ','SLIS','RIF','EMB','PZA','STR']:
 			what_we_found = list(regions_found[drug])
 			what_we_should_found = drug_to_WGSregion[drug]
 			for region in what_we_should_found:
 				self.assertTrue(region in what_we_found, msg='If failed we did not find {} region for drug {}'.format(region, drug))
 
-	def test_AJRCCM_WGS(self):
-		"""Test to make sure no non-AJRCCM regions are present in WGS test results"""
+	def test_AJRCCM_labels(self):
+		"""Test to make sure all AJRCCM labels are labeled correctly/none are not labeled that should be labeled """
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
-		# WGS_AJRCCM = WGS[WGS['extra_annotation']]
-		mutations = [break_down_mutation(i) for i in WGS['mutation'].values]
+		mutations = [[break_down_mutation(mutation), annotation] for mutation, annotation in WGS[['mutation','extra_annotation']].values]
 		processed_snps = []
 		snps = [i.split('\t') for i in open('snps','r').readlines()]
 		for drug, snp in snps:
@@ -49,21 +49,36 @@ class Test(unittest.TestCase):
 				drug = 'SLIS'
 			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
 				drug = 'FLQ'
-			elif(drug != 'INH' and drug != 'RIF'):
+			elif(drug != 'INH' and drug != 'RIF' and drug != 'PZA' and drug != 'STR' and drug != 'EMB'):
 				drug = None
 			if(drug):
 				processed_snps.append(break_down_mutation(snp.rstrip()))
 
-		for mutation in mutations:
+		for mutation, annotation in mutations:
 			found = False
 			for snp in processed_snps:
 				if(snp.compare_variant_name_location(mutation)):
 					found = True
-			self.assertTrue(found, msg='{} not in AJRCCM region of interest'.format(mutation))
+			if(found):
+				self.assertTrue(found == True and 'AJRCCM' in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+			else:
+				self.assertTrue(not found and 'AJRCCM' not in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 
-	def test_AJRCCM_labels(self):
-		"""Test to make sure all AJRCCM labels are labeled correctly/none are not labeled that should be labeled """
+	def test_table_10_labels(self):
+		"""Test to make sure all table 10 labels are labeled correctly/none are not labeled that should be """
+		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		# WGS_AJRCCM = WGS[WGS['extra_annotation']]
+		mutations = [[break_down_mutation(mutation), annotation] for mutation, annotation in WGS[['mutation','extra_annotation']].values]
 
+		for mutation, annotation in mutations:
+			found = False
+			if(classify_WGS_mutation(mutation)):
+				found = True
+
+			if(found):
+				self.assertTrue(found == True and 'Table-10-snp' in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+			else:
+				self.assertTrue(not found and 'Table-10-snp' not in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 
 	def test_regions_locations_commercial(self):
 		"""Tests if commercial regions are only those that we wanted to search and that all are represented"""
@@ -274,7 +289,7 @@ class Test(unittest.TestCase):
 		self.assertTrue('SNP_CN_2519048_G934A_G312S_kasA' in lineage_snps_unprocessed, msg = 'SNP_CN_2519048_G934A_G312S_kasA not found in lineage list')
 
 	def test_lineage_included_commercial(self):
-		"""Rest to make sure lineage snps are included in WGS results """
+		"""Rest to make sure lineage snps are included in commercial results """
 		commercial = pd.read_csv('commercial_aggregated_test_results',sep='\t')
 		mutations = list(commercial['mutation'].values)
 		lineage_snps_processed = ['_'.join(i.rstrip().split('_')[-2:]) for i in open('lineage_snp','r').readlines()]
@@ -286,11 +301,61 @@ class Test(unittest.TestCase):
 
 		self.assertTrue(found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
 
+	def test_no_synonymous_WGS(self):
+		"""Test to make sure WGS test has no synonymous mutations"""
+		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		self.assertTrue(WGS['synonymous'].sum() == 0, msg='synonymous mutations in WGS results')
+
+	def test_commercial_reclassification(self):
+		"""Test to make sure all FLQ/SLI resistant classified isolates in commercial tests are appropriately classified as so i.e. have both INH and RIF resistance mutations"""
+		WGS = pd.read_csv('commercial_raw_test_results',sep='\t')
+		strains = list(set(WGS['strain'].values))
+		
+		for strain in strains:
+			drugs_present = list(set(WGS[WGS['strain'] == strain]['drug'].values))
+
+			#Test to make sure if no INH and no RIF that we made all of them into "IGNORE" extra annotation
+			if(not('INH' in drugs_present) and not('RIF' in drugs_present)):
+				if('FLQ' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to FLQ but does not have INH and RIF resistance'.format(strain))
+				if('SLIS' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance'.format(strain))
+			else:
+				#Test to make sure we did not accidently classify something as IGNORE that should not have been
+				if('FLQ' in drugs_present):
+					values = WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to FLQ but does have INH or RIF resistance'.format(strain))
+				if('SLIS' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to SLIS but does have INH or RIF resistance'.format(strain))
+
+		#Some more checking -- check how many should be changed vs how many were changed
 
 
-
-
-
+	def test_WGS_reclassification(self):
+		"""Test to make sure all FLQ/SLI resistant classified isolates in WGS tests are appropriately classified as so i.e. have both INH and RIF resistance mutations"""
+		WGS = pd.read_csv('WGS_raw_test_results',sep='\t')
+		strains = list(set(WGS['strain'].values))
+		
+		for strain in strains:
+			drugs_present = list(set(WGS[WGS['strain'] == strain]['drug'].values))
+			if(not('INH' in drugs_present) and not('RIF' in drugs_present)):
+				if('FLQ' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to FLQ but does not have INH and RIF resistance'.format(strain))
+				if('SLIS' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance'.format(strain))
+			else:
+				#Test to make sure we did not accidently classify something as IGNORE that should not have been
+				if('FLQ' in drugs_present):
+					values = WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to FLQ but does have INH or RIF resistance'.format(strain))
+				if('SLIS' in drugs_present):
+					values = WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to SLIS but does have INH or RIF resistance'.format(strain))
 
 
 if __name__ == '__main__':
