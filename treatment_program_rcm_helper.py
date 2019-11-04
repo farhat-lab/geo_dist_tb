@@ -19,17 +19,17 @@ class Variant:
 		if('-' in self.AA_change):
 			part_one, part_two = self.AA_change.split('-')
 			if(len(part_one) == len(part_two) or len(part_one)%3 == 0 and len(part_one)%3 == 0):
-				print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
+				#print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
 				return False
 			else:
-				print("REAL FRAMESHIFT {}".format(self.original_snp))
+				#print("REAL FRAMESHIFT {}".format(self.original_snp))
 				return True
 		else:	
 			if(len(self.AA_change) == 2):
-				print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
+				#print("CAUGHT A FRAMESHIFT THAT NOT ACTUALLY ONE {}".format(self.original_snp))
 				return False
 			else:
-				print("REAL FRAMESHIFT {}".format(self.original_snp))
+				#print("REAL FRAMESHIFT {}".format(self.original_snp))
 				return True
 
 	def compare_variant_name_location_AAchange(self, variant):
@@ -258,7 +258,10 @@ drug_to_WGSregion = {
 	'INH':['inhA','iniB','embB','promoter-fabG1-inhA','promoter-ahpC','ahpC','promoter-embA-embB','kasA','katG'],
 	'FLQ':['gyrB','gyrA'],
 	'SLIS':['rrs','inter-eis-Rv2417c','tlyA'],
-	'RIF':['rpoB']
+	'RIF':['rpoB'],
+	'STR':['gid','rpsL','rrs','inter-rrs-rrl'],
+	'PZA':['inter-pncA-Rv2044c','pncA','rpsA'],
+	'EMB':['embA','embB','embC','iniB','promoter-embA-embB']
 }
 
 drug_to_COMregion = {

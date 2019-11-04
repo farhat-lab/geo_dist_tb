@@ -173,14 +173,14 @@ class commercial_WGS_tester():
 	def check_RIF(self,gene):
 		return 'rpoB' == gene
 
-	def check_STR(self, geme):
+	def check_STR(self, gene):
 		return ('gid' == gene) or ('rpsL' == gene) or ('rrs' == gene) or ('inter-rrs-rrl' == gene)
 
 	def check_PZA(self, gene):
 		return ('inter-pncA-Rv2044c' == gene) or ('pncA' == gene) or ('rpsA' == gene)
 
 	def check_EMB(self, gene):
-		return ('embA' == gene) or ('embB' == gene) or ('embC' == gene) or ('iniB' == gene) or ('inter-embC-embA' == gene)
+		return ('embA' == gene) or ('embB' == gene) or ('embC' == gene) or ('iniB' == gene) or ('promoter-embA-embB' == gene)
 
 	def check_SLIS(self,gene):
 		#drugs in SLIS 'KANAMYCIN' 'AMIKACIN' 'CAPREOMYCIN'
@@ -216,27 +216,28 @@ class commercial_WGS_tester():
 		if('-' not in codon_position):
 			codon_position = int(codon_position)
 		#Note negative signs are just positive
+		drug = []
 		return_variable = False
 		if(self.check_INH(gene_name)):
-			drug = 'INH'
+			drug.append('INH')
 			return_variable = True
-		elif(self.check_RIF(gene_name)):
-			drug = 'RIF'
+		if(self.check_RIF(gene_name)):
+			drug.append('RIF')
 			return_variable = True
-		elif(self.check_SLIS(gene_name)):
-			drug = 'SLIS'
+		if(self.check_SLIS(gene_name)):
+			drug.append('SLIS')
 			return_variable = True
-		elif(self.check_FQ(gene_name)):
-			drug = 'FLQ'
+		if(self.check_FQ(gene_name)):
+			drug.append('FLQ')
 			return_variable = True
-		elif(self.check_PZA(gene_name)):
-			drug = 'PZA'
+		if(self.check_PZA(gene_name)):
+			drug.append('PZA')
 			return_variable = True
-		elif(self.check_EMB(gene_name)):
-			drug = 'EMB'
+		if(self.check_EMB(gene_name)):
+			drug.append('EMB')
 			return_variable = True
-		elif(self.check_STR(gene_name)):
-			drug = 'STR'
+		if(self.check_STR(gene_name)):
+			drug.append('STR')
 			return_variable = True
 
 		#So here if its a LSP 
@@ -250,7 +251,7 @@ class commercial_WGS_tester():
 		if(return_variable and type_change[0] != type_change[1]):
 			return 'asynonymous', drug
 		else:
-			return False, False
+			return False, [False]
 
 	def perform_analysis(self,combined, check, raw_result_file_name, exclude_lineage, include_only_snp):
 		count = 0
@@ -266,41 +267,42 @@ class commercial_WGS_tester():
 				for line in vcf.readlines()[1:]:
 					mutation = [i for i in line.split('\t') if 'SNP' in i or 'INS' in i or 'DEL' in i or 'LSP' in i][0]
 					broken_down_mutation = self.break_down_mutation(line)
-					commercial, drug = check(broken_down_mutation)
-
+					commercial, drugs = check(broken_down_mutation)
 					#Logic to exclude lineage mutations if needed to be detected
 					if(exclude_lineage):
 						if(self.check_lineage(broken_down_mutation)):
 							commercial = False
-
-					#Logic to include only 
-					if(commercial and include_only_snp):
-						if(self.check_snp(broken_down_mutation, drug)):
-							extra_annotation = 'AJRCCM/Table-10-snp'
-						else:
-							extra_annotation = 'Table-10-snp'
-					elif(include_only_snp):
-						test_result, drug = self.check_snp(broken_down_mutation)
-						if(test_result):
-							commercial = True
-							extra_annotation = 'AJRCCM'  
-					
-					if(commercial):
-						#Make sure the strain has data for that drug
-						if(combined[combined['strain'] == strain][drug].item() != -1):
-							if(combined[combined['strain'] == strain][drug].item() != 1):
-								if(commercial == 'synonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
-								elif(commercial == 'asynonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
+					old_commercial = commercial
+					for drug in drugs:
+						commercial = old_commercial
+						#Logic to include only 
+						if(commercial and include_only_snp):
+							if(self.check_snp(broken_down_mutation, drug)):
+								extra_annotation = 'AJRCCM/Table-10-snp'
 							else:
-								if(commercial == 'synonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
-								elif(commercial == 'asynonymous'):
-									to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
+								extra_annotation = 'Table-10-snp'
+						elif(include_only_snp):
+							test_result, drug = self.check_snp(broken_down_mutation)
+							if(test_result):
+								commercial = True
+								extra_annotation = 'AJRCCM'  
+					
+						if(commercial):
+							#Make sure the strain has data for that drug
+							if(combined[combined['strain'] == strain][drug].item() != -1):
+								if(combined[combined['strain'] == strain][drug].item() != 1):
+									if(commercial == 'synonymous'):
+										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
+									elif(commercial == 'asynonymous'):
+										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':0, 'susceptible':1, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
+								else:
+									if(commercial == 'synonymous'):
+										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':1, 'asynonymous':0, 'extra_annotation':extra_annotation}
+									elif(commercial == 'asynonymous'):
+										to_append = {'strain':strain, 'drug':drug,'mutation':line.split('\t')[5], 'resistant':1, 'susceptible':0, 'synonymous':0, 'asynonymous':1, 'extra_annotation':extra_annotation}
 
-							result = result.append(to_append, ignore_index=True)
-							print(to_append)
+								result = result.append(to_append, ignore_index=True)
+								print(to_append)
 		#RECLASSIFICATION
 		result = self.perform_reclassification(result)
 
@@ -336,11 +338,19 @@ class commercial_WGS_tester():
 			if(drug):
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
 				snp_to_drug[str(self.break_down_mutation(snp.rstrip()))] = drug
-
 		def check_if_snp(mutation, drug=None):
 			if(drug):	
 				for snp in drug_to_snp[drug]:
 					if(snp.compare_variant_name_location(mutation)):
+						return True
+				if(drug == 'RIF'):
+					if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
+						return True
+				elif(drug == 'PZA'):
+					if(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+						return True
+				elif(drug == 'INH'):
+					if(mutation.gene_name == 'katG' and mutation.is_frameshift):
 						return True
 				return False
 			else:
@@ -348,6 +358,12 @@ class commercial_WGS_tester():
 					if(snp.compare_variant_name_location(mutation)):
 						drug = snp_to_drug[str(mutation)]
 						return True, drug
+				if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
+					return True, 'RIF'
+				elif(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+					return True, 'PZA'
+				elif(mutation.gene_name == 'katG' and mutation.is_frameshift):
+					return True, 'INH'
 				return False, False
 
 		return check_if_snp
@@ -358,7 +374,7 @@ class commercial_WGS_tester():
 
 		result['count'] = 1
 		result = result.groupby(['drug','mutation', 'extra_annotation']).sum().reset_index().sort_values('drug',ascending=False).copy()
-		del result['Unnamed: 0']
+		#del result['Unnamed: 0']
 		result.to_csv(name, sep='\t')
 
 		return result
