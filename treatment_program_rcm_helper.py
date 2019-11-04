@@ -255,7 +255,7 @@ drug_mapping = {
 	}
 
 drug_to_WGSregion = {
-	'INH':['inhA','iniB','embB','promoter-fabG1-inhA','promoter-ahpC','ahpC','promoter-embA-embB','kasA','katG'],
+	'INH':['inhA','iniB','fabG1','embB','promoter-fabG1-inhA','promoter-ahpC','ahpC','promoter-embA-embB','kasA','katG'],
 	'FLQ':['gyrB','gyrA'],
 	'SLIS':['rrs','inter-eis-Rv2417c','tlyA'],
 	'RIF':['rpoB'],
