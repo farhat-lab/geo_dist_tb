@@ -292,6 +292,11 @@ class Test(unittest.TestCase):
 			for lineage_snp in lineage_snps_processed:
 				self.assertTrue(not (lineage_snp in mutation), msg = '{} lineage snp found in {}'.format(lineage_snp, mutation))
 
+		for mutation in mutations:
+			for lineage_snp in lineage_snps_processed:
+				the_same = break_down_mutation(lineage_snp).compare_variant_name_location_AAchange(break_down_mutation(mutation))
+				self.assertTrue(not the_same, msg = '{} lineage snp found in {}'.format(lineage_snp, mutation))
+
 
 		#make sure we added those extra snps
 		self.assertTrue('SNP_CN_2518919_G805A_G269S_kasA' in lineage_snps_unprocessed, msg = 'SNP_CN_2518919_G805A_G269S_kasA not found in lineage list')
@@ -307,7 +312,10 @@ class Test(unittest.TestCase):
 		found = False
 		for mutation in mutations:
 			for lineage_snp in lineage_snps_processed:
-				found = True
+				if(lineage_snp in mutation):
+					found = True
+				elif(break_down_mutation(lineage_snp).compare_variant_name_location_AAchange(break_down_mutation(mutation))):
+					found = True
 
 		self.assertTrue(found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
 
@@ -330,6 +338,27 @@ class Test(unittest.TestCase):
 			self.assertTrue(synonymous == False, msg='FOUND {} MUTATION WHICH IS synonymous!!!'.format(mutation))
 
 		# self.assertTrue(WGS['synonymous'].sum() == 0, msg='synonymous mutations in WGS results')
+
+	def test_synonymous_commercial(self):
+		"""Test to make sure commercial test has synonymous mutations"""
+		commercial = pd.read_csv('commercial_aggregated_test_results',sep='\t')
+		mutations = [break_down_mutation(i) for i in list(commercial[mutation].values)]
+		found_synonymous= False
+		for mutation in mutations:
+			type_change = mutation.AA_change
+			synonymous = True
+			if(len(type_change) > 2 and return_variable):
+				#return sysnonymous since something that large probs wont be synonymous
+				synonymous = False
+			#If its just an insertion or something again not gonna be synonymous
+			if(len(type_change) == 1 and return_variable):
+				synonymous = False
+			if(return_variable and type_change[0] != type_change[1]):
+				synonymous = False
+			if(not synonymous):
+				found_synonymous = True
+
+		self.assertTrue(found_synonymous == True, msg='Woops! did not find synonymous mutations in commercial make sure you did not filter them out'.format(mutation))
 
 	def test_commercial_reclassification(self):
 		"""Test to make sure all FLQ/SLI resistant ARE NOT ACCIDENTLY reclassified depending if have both INH and RIF resistance mutations"""
