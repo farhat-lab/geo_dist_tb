@@ -60,9 +60,9 @@ class Test(unittest.TestCase):
 				if(snp.compare_variant_name_location(mutation)):
 					found = True
 			if(found):
-				self.assertTrue(found == True and 'AJRCCM' in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+				self.assertTrue(found == True and ('AJRCCM' in annotation) or ('IGNORE' in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 			else:
-				self.assertTrue(not found and 'AJRCCM' not in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+				self.assertTrue(not found and ('AJRCCM' not in annotation) or ('IGNORE' in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 
 	def test_table_10_labels(self):
 		"""Test to make sure all table 10 labels are labeled correctly/none are not labeled that should be """
@@ -76,9 +76,9 @@ class Test(unittest.TestCase):
 				found = True
 
 			if(found):
-				self.assertTrue(found == True and 'Table-10-snp' in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+				self.assertTrue(found == True and ('Table-10-snp' in annotation) or ('IGNORE' in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 			else:
-				self.assertTrue(not found and 'Table-10-snp' not in annotation, msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+				self.assertTrue(not found and ('Table-10-snp' not in annotation) or ('IGNORE' in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 
 	def test_regions_locations_commercial(self):
 		"""Tests if commercial regions are only those that we wanted to search and that all are represented"""
