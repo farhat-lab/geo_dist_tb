@@ -13,12 +13,13 @@ class commercial_WGS_tester():
 
 	"""
 
-	def __init__(self, vcf_directory, strain_info, results_modified_unknown,lineage_snp, snp, ignore=False):
+	def __init__(self, vcf_directory, strain_info, results_modified_unknown,lineage_snp, snp, cryptic_snp, ignore=False):
 		if(not ignore):
 			self.vcf_directory = vcf_directory
 			self.strain_info = self.setup(strain_info)
 			self.check_lineage = self.generate_lineage_snp_checker(lineage_snp)
 			self.check_snp = self.generate_snp_checker(snp)
+			self.check_snp_cryptic = self.generate_cryptic_snp_checker(cryptic_snp)
 
 
 	def setup(self, strain_info_file):
@@ -277,15 +278,31 @@ class commercial_WGS_tester():
 						commercial = old_commercial
 						#Logic to include only 
 						if(commercial and include_only_snp):
-							if(self.check_snp(broken_down_mutation, drug)):
-								extra_annotation = 'AJRCCM/Table-10-snp'
+							AJRCCM_result = self.check_snp(broken_down_mutation, drug)
+							CRYPTIC_result = self.check_snp_cryptic(broken_down_mutation, drug)
+							if(AJRCCM_result):
+								if(CRYPTIC_result):
+									extra_annotation = 'AJRCCM/CRYPTIC/Table-10-snp'
+								else:
+									extra_annotation = 'AJRCCM/Table-10-snp'
+							elif(CRYPTIC_result):
+								extra_annotation = 'CRYPTIC/Table-10-snp'
 							else:
 								extra_annotation = 'Table-10-snp'
 						elif(include_only_snp):
-							test_result, drug = self.check_snp(broken_down_mutation)
-							if(test_result):
+							AJRCCM_test_result, AJRCCM_drug = self.check_snp(broken_down_mutation)
+							CRYPTIC_test_result, CRYPTIC_drug = self.check_snp_cryptic(broken_down_mutation)
+
+							if(AJRCCM_test_result):
+								if(CRYPTIC_test_result):
+									commercial = True
+									extra_annotation = 'CRYPTIC/AJRCCM'
+								else:
+									commercial = True
+									extra_annotation = 'AJRCCM'  
+							elif(CRYPTIC_test_result):
 								commercial = True
-								extra_annotation = 'AJRCCM'  
+								extra_annotation = 'CRYPTIC'
 					
 						if(commercial):
 							#Make sure the strain has data for that drug
@@ -303,8 +320,8 @@ class commercial_WGS_tester():
 
 								result = result.append(to_append, ignore_index=True)
 								print(to_append)
-		#RECLASSIFICATION
-		result = self.perform_reclassification(result)
+		# #RECLASSIFICATION
+		# result = self.perform_reclassification(result)
 
 		result.to_csv(raw_result_file_name,sep='\t')
 		return result
@@ -368,6 +385,89 @@ class commercial_WGS_tester():
 
 		return check_if_snp
 
+	def cryptic_snp_parser(self, line):
+		gene_name, change, type_change = line.split('\t')
+		drug = None
+
+		if(type_change == 'PROT'): 
+			specific_change,codon_position = change[0]+change[len(change)-1], change[1:len(change)-1]
+		elif(type_change == 'DNA'):
+			if(len(change) > 10):
+				#Then this is a LSP
+				specific_change, codon_position = re.sub('\d+[-]+\d+', '-', codonAA), re.findall('\d+[-]+\d+', codonAA)[0]
+			else:
+				if('-' in change):
+					if(gene_name == 'eis'):
+						gene_name = 'inter-eis-Rv2417c'
+					elif(gene_name == 'pncA'):
+						gene_name = 'promoter-pncA'
+					elif(gene_name == 'embA'):
+						gene_name = 'promoter-embA-embB'
+					elif(gene_name == 'ahpC'):
+						gene_name = 'promoter-ahpC'
+					elif(gene_name == 'fabG1'):
+						gene_name = 'promoter-fabG1-inhA'
+					else:
+						raise Exception("gene name we do not have promoter to {}".format(line))
+					change = re.sub('-','', change)
+					specific_change,codon_position = change[0]+change[len(change)-1], change[1:len(change)-1]
+				else:
+					raise Exception("Unrecognized DNA change format {}".format(line))
+		else:
+			raise Exception("Do not recognize type {}".format(type_change))
+
+		for potential_drug in drug_to_WGSregion:
+			if(gene_name in drug_to_WGSregion[potential_drug]):
+				if(drug != None):
+					raise Exception("Ambiguous gene we don't know which drug it is resistant to {}".format(line))
+				else:
+					drug = potential_drug 
+		if(drug == None):
+			raise Exception("Could not find a drug for the gene {}".format(line))
+
+		return drug, Variant(gene_name, codon_position, specific_change, line)
+
+	def generate_cryptic_snp_checker(self, snp_file):
+		#Generate function to check if a snp is from list in CRYPTIC snp list
+		drug_to_snp = {'INH':[],'RIF':[],'SLIS':[],'FLQ':[], 'PZA':[], 'STR':[], 'EMB':[]}
+		snp_to_drug = {}
+		snps = [i.split('\t') for i in open(snp_file,'r').readlines()]
+		for line in open(cryptic_snp,'r').readlines():
+			drug, mutation = self.cryptic_snp_parser(line)
+			drug_to_snp[drug].append(mutation)
+			snp_to_drug[str(mutation)] = drug
+
+		def check_if_snp(mutation, drug=None):
+			if(drug):	
+				for snp in drug_to_snp[drug]:
+					if(snp.compare_variant_name_location(mutation)):
+						return True
+				if(drug == 'RIF'):
+					if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
+						return True
+				elif(drug == 'PZA'):
+					if(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+						return True
+				elif(drug == 'INH'):
+					if(mutation.gene_name == 'katG' and mutation.is_frameshift):
+						return True
+				return False
+			else:
+				for snp in [item for sublist in drug_to_snp.values() for item in sublist]:
+					if(snp.compare_variant_name_location(mutation)):
+						drug = snp_to_drug[str(mutation)]
+						return True, drug
+				if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
+					return True, 'RIF'
+				elif(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+					return True, 'PZA'
+				elif(mutation.gene_name == 'katG' and mutation.is_frameshift):
+					return True, 'INH'
+				return False, False
+
+		return check_if_snp
+
+
 	def post_processing(self,result, name, recreate = False):
 		if(recreate):
 			result = pd.read_csv(recreate, sep='\t')
@@ -388,7 +488,7 @@ class commercial_WGS_tester():
 				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'susceptible'] = 1
 				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'extra_annotation'] = 'IGNORE'
 				# print("{} RECLASSIFYING".format(strain))
-			else:
+			#else:
 				# print("{} IS GOOD".format(strain))
 
 		return result
@@ -464,7 +564,7 @@ class commercial_WGS_tester():
 	def calculate_statistics_WGS(self):
 		# total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
 		# total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
-		for annotation in ['Table-10-snp','AJRCCM']:
+		for annotation in ['Table-10-snp','AJRCCM', 'CRYPTIC']:
 			print("FOR FOLLOWING MUTATIONS IN {}".format(annotation))
 			if(annotation == 'Table-10-snp'):
 				total_df = self.reclassify_raw_WGS()
@@ -486,7 +586,7 @@ class commercial_WGS_tester():
 
 def main():
 	#NOTE ONLY RECLASSIFICATION HAPPENS FOR ALL_WGS_TEST!
-	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
+	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps', 'panel.final.Cryptic_no_frameshift.txt')
 	tester.perform_commercial_test()
 	tester.perform_WGS_test()
 	tester.perform_commercial_post_processing()
