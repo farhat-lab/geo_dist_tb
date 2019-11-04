@@ -314,7 +314,22 @@ class Test(unittest.TestCase):
 	def test_no_synonymous_WGS(self):
 		"""Test to make sure WGS test has no synonymous mutations"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
-		self.assertTrue(WGS['synonymous'].sum() == 0, msg='synonymous mutations in WGS results')
+		mutations = [break_down_mutation(i) for i in list(WGS[mutation].values)]
+		for mutation in mutations:
+			type_change = mutation.AA_change
+			synonymous = True
+			if(len(type_change) > 2 and return_variable):
+				#return sysnonymous since something that large probs wont be synonymous
+				synonymous = False
+			#If its just an insertion or something again not gonna be synonymous
+			if(len(type_change) == 1 and return_variable):
+				synonymous = False
+			if(return_variable and type_change[0] != type_change[1]):
+				synonymous = False
+
+			self.assertTrue(synonymous == False, msg='FOUND {} MUTATION WHICH IS synonymous!!!'.format(mutation))
+
+		# self.assertTrue(WGS['synonymous'].sum() == 0, msg='synonymous mutations in WGS results')
 
 	def test_commercial_reclassification(self):
 		"""Test to make sure all FLQ/SLI resistant ARE NOT ACCIDENTLY reclassified depending if have both INH and RIF resistance mutations"""
