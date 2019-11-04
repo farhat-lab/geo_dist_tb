@@ -177,7 +177,7 @@ class commercial_WGS_tester():
 		return ('gid' == gene) or ('rpsL' == gene) or ('rrs' == gene) or ('inter-rrs-rrl' == gene)
 
 	def check_PZA(self, gene):
-		return ('inter-pncA-Rv2044c' == gene) or ('pncA' == gene) or ('rpsA' == gene)
+		return ('promoter-pncA' == gene) or ('pncA' == gene) or ('rpsA' == gene)
 
 	def check_EMB(self, gene):
 		return ('embA' == gene) or ('embB' == gene) or ('embC' == gene) or ('iniB' == gene) or ('promoter-embA-embB' == gene)
@@ -415,14 +415,14 @@ class commercial_WGS_tester():
 
 	def reclassify_raw_result(self, name):
 		result = pd.read_csv(name,sep='\t')
-		self.perform_reclassification(result).to_csv(name,sep='\t')
-		# self.perform_reclassification(result)
+		#self.perform_reclassification(result).to_csv(name,sep='\t')
+		return self.perform_reclassification(result)
 
 	def reclassify_raw_commercial(self):
 		self.reclassify_raw_result('commercial_raw_test_results')
 
 	def reclassify_raw_WGS(self):
-		self.reclassify_raw_result('WGS_raw_test_results')
+		return self.reclassify_raw_result('WGS_raw_test_results')
 
 	# def get_revised_strain_info_count(self, modified_raw_test_results, drug):
 	# 	"""After we revise phenotype of the isolates we need to count via strain info but make sure phenotype wasn't revised in our analysis"""
@@ -462,12 +462,17 @@ class commercial_WGS_tester():
 			print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 
 	def calculate_statistics_WGS(self):
-		total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
-		total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
+		# total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
+		# total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
 		for annotation in ['Table-10-snp','AJRCCM']:
 			print("FOR FOLLOWING MUTATIONS IN {}".format(annotation))
-			df = total_df[total_df['extra_annotation'].str.contains(annotation)]
+			if(annotation == 'Table-10-snp'):
+				total_df = self.reclassify_raw_WGS()
+				total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
+			else:
+				total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
 
+			df = total_df[total_df['extra_annotation'].str.contains(annotation)]
 			for drug in ['INH','RIF','SLIS','FLQ', 'STR','PZA','EMB']:
 				number_resistant_predicted = df[(df['drug'] == drug) & (df['resistant'] == 1)]['strain'].nunique()
 				number_susceptible_predicted = df[(df['drug'] == drug) & (df['susceptible'] == 1)]['strain'].nunique()
@@ -480,13 +485,14 @@ class commercial_WGS_tester():
 				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 
 def main():
+	#NOTE ONLY RECLASSIFICATION HAPPENS FOR ALL_WGS_TEST!
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
-	#tester.perform_commercial_test()
+	tester.perform_commercial_test()
 	tester.perform_WGS_test()
-	# tester.perform_commercial_post_processing()
+	tester.perform_commercial_post_processing()
 	tester.perform_WGS_post_processing()
 	# tester.reclassify_raw_commercial()
-	tester.reclassify_raw_WGS()
+	# tester.reclassify_raw_WGS()
 	print("COMMERCIAL STATS")
 	tester.calculate_statistics_commercial()
 	print("WGS STATS \n\n\n\n")

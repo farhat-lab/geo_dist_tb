@@ -260,7 +260,7 @@ drug_to_WGSregion = {
 	'SLIS':['rrs','inter-eis-Rv2417c','tlyA'],
 	'RIF':['rpoB'],
 	'STR':['gid','rpsL','rrs','inter-rrs-rrl'],
-	'PZA':['inter-pncA-Rv2044c','pncA','rpsA'],
+	'PZA':['promoter-pncA','pncA','rpsA'],
 	'EMB':['embA','embB','embC','iniB','promoter-embA-embB']
 }
 
