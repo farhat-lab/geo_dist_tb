@@ -59,6 +59,17 @@ class Test(unittest.TestCase):
 			for snp in processed_snps:
 				if(snp.compare_variant_name_location(mutation)):
 					found = True
+			if(not found):
+				if(mutation.gene_name in ['rpoB','pncA', 'katG']):
+					change = self.AA_change
+					if('-' in change):
+						one, two = change.split('-')
+						if(len(one) != len(two) and (len(one)%3!= 0 or len(two)%3!=0)):
+							found = True
+					else:
+						if(len(change) == 1 or len(change) > 2):
+							found = True
+
 			if(found):
 				self.assertTrue(found == True and ('AJRCCM' in annotation) , msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 			else:
@@ -74,7 +85,6 @@ class Test(unittest.TestCase):
 			found = False
 			if(classify_WGS_mutation(mutation)):
 				found = True
-
 			if(found):
 				self.assertTrue(found == True and ('Table-10-snp' in annotation) or ('IGNORE' in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 			else:
@@ -322,6 +332,15 @@ class Test(unittest.TestCase):
 				if('SLIS' in drugs_present):
 					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values:
 						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('EMB' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to EMB but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('PZA' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to PZA but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('STR' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to STR but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
 			else:
 				#Test to make sure we did not accidently classify something as IGNORE that should not have been
 				if('FLQ' in drugs_present):
@@ -330,12 +349,20 @@ class Test(unittest.TestCase):
 				if('SLIS' in drugs_present):
 					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values 
 					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to SLIS but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
-
+				if('EMB' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to EMB but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('PZA' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to PZA but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('STR' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to STR but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
 		#Some more checking -- check how many should be changed vs how many were changed
 
 
-	def test_WGS_reclassification(self):
-		"""Test to make sure all FLQ/SLI resistant classified isolates in WGS tests are appropriately classified as so i.e. have both INH and RIF resistance mutations"""
+	def test_WGS_reclassify_reclassification(self):
+		"""Test to make sure all FLQ/SLI resistant classified isolates in WGS WGS_all tests are appropriately classified as so i.e. have both INH and RIF resistance mutations"""
 		WGS = commercial_WGS_tester_full.reclassify_raw_WGS()
 		strains = list(set(WGS['strain'].values))
 
@@ -347,7 +374,16 @@ class Test(unittest.TestCase):
 						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to FLQ but does not have INH and RIF resistance'.format(strain))
 				if('SLIS' in drugs_present):
 					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values:
-						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance'.format(strain))
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance '.format(strain))
+				if('EMB' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to EMB but does not have INH and RIF resistance '.format(strain))
+				if('PZA' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to PZA but does not have INH and RIF resistance '.format(strain))
+				if('STR' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values:
+						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to STR but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
 			else:
 				#Test to make sure we did not accidently classify something as IGNORE that should not have been
 				if('FLQ' in drugs_present):
@@ -356,7 +392,58 @@ class Test(unittest.TestCase):
 				if('SLIS' in drugs_present):
 					values = WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values 
 					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to SLIS but does have INH or RIF resistance'.format(strain))
+				if('EMB' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to EMB but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('PZA' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to PZA but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('STR' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to STR but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
 
+	def test_WGS_reclassification(self):
+		"""Test to make sure all FLQ/SLI resistant ARE NOT ACCIDENTLY reclassified depending if have both INH and RIF resistance mutations in select WGS_test"""
+		WGS = pd.read_csv('WGS_raw_test_results',sep='\t')
+		strains = list(set(WGS['strain'].values))
+		
+		for strain in strains:
+			drugs_present = list(set(WGS[WGS['strain'] == strain]['drug'].values))
+
+			#Test to make sure if no INH and no RIF that we made all of them into "IGNORE" extra annotation
+			if(not('INH' in drugs_present) and not('RIF' in drugs_present)):
+				if('FLQ' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to FLQ but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('SLIS' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to SLIS but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('EMB' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to EMB but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('PZA' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to PZA but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+				if('STR' in drugs_present):
+					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values:
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to STR but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+			else:
+				#Test to make sure we did not accidently classify something as IGNORE that should not have been
+				if('FLQ' in drugs_present):
+					values = WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'FLQ')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to FLQ but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('SLIS' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'SLIS')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to SLIS but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('EMB' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'EMB')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to EMB but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('PZA' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'PZA')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to PZA but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
+				if('STR' in drugs_present):
+					values =  WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values 
+					self.assertTrue(not('IGNORE' in values), msg='{} is marked not resistant to STR but does have INH or RIF resistance i.e. was reclassified!'.format(strain))
 
 if __name__ == '__main__':
 	unittest.main()

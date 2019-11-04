@@ -96,33 +96,33 @@ class commercial_WGS_tester():
 
 	def check_variant_commercial(self,variant):
 		gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
-
+		drug = []
 		if('-' not in codon_position):
 			codon_position = int(codon_position)
 			#Note negative signs are just positive
 			return_variable = False
 			if(gene_name == 'katG' and codon_position == 315):
-				drug = 'INH'
+				drug.append('INH')
 				return_variable = True
 			elif(gene_name == 'promoter-fabG1-inhA' and codon_position in [15, 16,8]):
-				drug = 'INH'
+				drug.append('INH')
 				return_variable = True
-			elif(gene_name == 'rpoB' and codon_position in list(range(424,454))):
-				drug = 'RIF'
+			if(gene_name == 'rpoB' and codon_position in list(range(424,454))):
+				drug.append('RIF')
 				return_variable = True
-			elif(gene_name == 'rrs' and codon_position in [1401,1402]):
-				drug = 'SLIS'
+			if(gene_name == 'rrs' and codon_position in [1401,1402]):
+				drug.append('SLIS')
 				return_variable = True
 			elif(gene_name == 'inter-eis-Rv2417c' and  codon_position in [10,11,12,13,14,37]):
-				drug = 'SLIS'
+				drug.append('SLIS')
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
-			elif(gene_name == 'gyrA' and codon_position in [89,90,91,92,93,94]):
-				drug = 'FLQ'
+			if(gene_name == 'gyrA' and codon_position in [89,90,91,92,93,94]):
+				drug.append('FLQ')
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
 			elif(gene_name == 'gyrB' and codon_position in list(range(500,542))):
-				drug = 'FLQ'
+				drug.append('FLQ')
 				return_variable = True
 		else:
 			#LSP deals with ranges so we see if the range intersects
@@ -132,27 +132,27 @@ class commercial_WGS_tester():
 			#Note negative signs are just positive
 			return_variable = False
 			if(gene_name == 'katG' and (start_codon_position <= 315 <= end_codon_position)):
-				drug = 'INH'
+				drug.append('INH')
 				return_variable = True
 			elif(gene_name == 'promoter-fabG1-inhA' and True in [ start_codon_position <= i <= end_codon_position for i in [15, 16,8]]):
 				drug = 'INH'
 				return_variable = True
-			elif(gene_name == 'rpoB' and True in [ start_codon_position <= i <= end_codon_position for i in list(range(424,454))]):
-				drug = 'RIF'
+			if(gene_name == 'rpoB' and True in [ start_codon_position <= i <= end_codon_position for i in list(range(424,454))]):
+				drug.append('RIF')
 				return_variable = True
-			elif(gene_name == 'rrs' and  True in [ start_codon_position <= i <= end_codon_position for i in [1401, 1402]]):
-				drug = 'SLIS'
+			if(gene_name == 'rrs' and  True in [ start_codon_position <= i <= end_codon_position for i in [1401, 1402]]):
+				drug.append('SLIS')
 				return_variable = True
 			elif(gene_name == 'inter-eis-Rv2417c' and  True in [ start_codon_position <= i <= end_codon_position for i in [10,11,12,13,14,37]]):
-				drug = 'SLIS'
+				drug.append('SLIS')
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrA' and codon_position in [88,89,90,91,92,93,94]):
-			elif(gene_name == 'gyrA' and True in [ start_codon_position <= i <= end_codon_position for i in [89,90,91,92,93,94]]):
-				drug = 'FLQ'
+			if(gene_name == 'gyrA' and True in [ start_codon_position <= i <= end_codon_position for i in [89,90,91,92,93,94]]):
+				drug.append('FLQ')
 				return_variable = True
 			#elif(drug in ['LEVO','FLQ'] and gene_name == 'gyrB' and codon_position in list(range(500,541))):
 			elif(gene_name == 'gyrB' and True in [ start_codon_position <= i <= end_codon_position for i in list(range(500,542))]):
-				drug = 'FLQ'
+				drug.append('FLQ')
 				return_variable = True
 
 
@@ -168,7 +168,7 @@ class commercial_WGS_tester():
 		elif(return_variable and type_change[0] != type_change[1]):
 			return 'asynonymous', drug
 		else:
-			return False, False
+			return False, [False]
 
 	def check_RIF(self,gene):
 		return 'rpoB' == gene
@@ -384,9 +384,9 @@ class commercial_WGS_tester():
 		for strain in strains:
 			if(self.SLIFLQ_reclassification_required(strain, result)):
 				#We change all resistant to 0 and susceptible to 1 and type to "IGNORE" to ignore the mutation
-				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS', 'PZA','STR','EMB'])), 'resistant'] = 0
-				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','STR','EMB'])), 'susceptible'] = 1
-				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','STR','EMB'])), 'extra_annotation'] = 'IGNORE'
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS', 'PZA','EMB'])), 'resistant'] = 0
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'susceptible'] = 1
+				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'extra_annotation'] = 'IGNORE'
 				print("{} RECLASSIFYING".format(strain))
 			else:
 				print("{} IS GOOD".format(strain))
