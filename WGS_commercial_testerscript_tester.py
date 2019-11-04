@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
 	def test_AJRCCM_labels(self):
 		"""Test to make sure all AJRCCM labels are labeled correctly/none are not labeled that should be labeled """
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
-		mutations = [[break_down_mutation(mutation), annotation] for mutation, annotation in WGS[['mutation','extra_annotation']].values]
+		mutations = [[drug,break_down_mutation(mutation), annotation] for drug,mutation, annotation in WGS[['drug','mutation','extra_annotation']].values]
 		processed_snps = []
 		snps = [i.split('\t') for i in open('snps','r').readlines()]
 		for drug, snp in snps:
@@ -52,16 +52,16 @@ class Test(unittest.TestCase):
 			elif(drug != 'INH' and drug != 'RIF' and drug != 'PZA' and drug != 'STR' and drug != 'EMB'):
 				drug = None
 			if(drug):
-				processed_snps.append(break_down_mutation(snp.rstrip()))
+				processed_snps.append([break_down_mutation(snp.rstrip()), drug])
 
-		for mutation, annotation in mutations:
+		for drug_compare, mutation, annotation in mutations:
 			found = False
-			for snp in processed_snps:
-				if(snp.compare_variant_name_location(mutation)):
+			for snp, drug in processed_snps:
+				if(snp.compare_variant_name_location(mutation) and drug == drug_compare):
 					found = True
 			if(not found):
 				if(mutation.gene_name in ['rpoB','pncA', 'katG']):
-					change = self.AA_change
+					change = mutation.AA_change
 					if('-' in change):
 						one, two = change.split('-')
 						if(len(one) != len(two) and (len(one)%3!= 0 or len(two)%3!=0)):
@@ -383,7 +383,7 @@ class Test(unittest.TestCase):
 						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to PZA but does not have INH and RIF resistance '.format(strain))
 				if('STR' in drugs_present):
 					for i in WGS[(WGS['strain'] == strain)&(WGS['drug'] == 'STR')]['extra_annotation'].values:
-						self.assertTrue(i == 'IGNORE', msg='{} is marked resistant to STR but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
+						self.assertTrue(i != 'IGNORE', msg='{} is marked resistant to STR but does not have INH and RIF resistance i.e. it has been reclassified!'.format(strain))
 			else:
 				#Test to make sure we did not accidently classify something as IGNORE that should not have been
 				if('FLQ' in drugs_present):
