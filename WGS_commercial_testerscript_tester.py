@@ -165,34 +165,34 @@ class Test(unittest.TestCase):
 	def test_classifier_COM_SLIS(self):
 		"""Test commercial classifier to see if it can detect positive and negative for SLI commercial mutations"""
 
-		for test,expected in [['SNP_N_1473247_C1402C_rrs',['synonymous','SLIS']],
-							['SNP_N_1473247_C1402T_rrs',['asynonymous','SLIS']],
-							['SNP_N_1473247_C1401C_rrs',['synonymous','SLIS']],
-							['SNP_N_1473247_C1401T_rrs',['asynonymous','SLIS']],
-							['SNP_N_1473247_C1403C_rrs',[False, False]],
-							['SNP_N_1473247_C1400T_rrs',[False, False]],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(10+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(10+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(11+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(11+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(12+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(12+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(13+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(13+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(14+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(14+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(37+2715332), ['asynonymous','SLIS']],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(37+2715332), ['synonymous','SLIS']],
-							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(38+2715332), [False, False]],
-							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(9+2715332), [False, False]],
-							['LSP_CN_410008_GG1-1402CT_VGQA1401-1402VGA_rrs', ['asynonymous', 'SLIS']],
-							['LSP_CN_410008_TTGG1401-1405G_VGQA1401-1402GA_rrs', ['asynonymous', 'SLIS']],
-							['LSP_CN_410008_TTGG1401-1402G_VGQA1390-1405VGA_rrs', ['asynonymous', 'SLIS']],
-							['LSP_CN_410008_TTGG1390-1400G_VGQA1390-1400VGA_rrs', [False, False]],
-							['DEL_P_4243204_d1401CT_rrs', ['asynonymous', 'SLIS']],
-							['DEL_P_4243204_d1399CT_rrs', [False, False]],
-							['INS_CF_2154110_i2002T_668L_rrs',[False, False]],
-							['INS_CF_2154110_i1401T_668L_rrs',['asynonymous', 'SLIS']]]:
+		for test,expected in [['SNP_N_1473247_C1402C_rrs',['synonymous',['SLIS']]],
+							['SNP_N_1473247_C1402T_rrs',['asynonymous',['SLIS']]],
+							['SNP_N_1473247_C1401C_rrs',['synonymous',['SLIS']]],
+							['SNP_N_1473247_C1401T_rrs',['asynonymous',['SLIS']]],
+							['SNP_N_1473247_C1403C_rrs',[False, [False]]],
+							['SNP_N_1473247_C1400T_rrs',[False, [False]]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(10+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(10+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(11+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(11+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(12+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(12+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(13+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(13+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(14+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(14+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(37+2715332), ['asynonymous',['SLIS']]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(37+2715332), ['synonymous',['SLIS']]],
+							['SNP_I_{}_C103A_inter-eis-Rv2417c'.format(38+2715332), [False, [False]]],
+							['SNP_I_{}_C103C_inter-eis-Rv2417c'.format(9+2715332), [False, [False]]],
+							['LSP_CN_410008_GG1-1402CT_VGQA1401-1402VGA_rrs', ['asynonymous', ['SLIS']]],
+							['LSP_CN_410008_TTGG1401-1405G_VGQA1401-1402GA_rrs', ['asynonymous', ['SLIS']]],
+							['LSP_CN_410008_TTGG1401-1402G_VGQA1390-1405VGA_rrs', ['asynonymous', ['SLIS']]],
+							['LSP_CN_410008_TTGG1390-1400G_VGQA1390-1400VGA_rrs', [False, [False]]],
+							['DEL_P_4243204_d1401CT_rrs', ['asynonymous', ['SLIS']]],
+							['DEL_P_4243204_d1399CT_rrs', [False, [False]]],
+							['INS_CF_2154110_i2002T_668L_rrs',[False, [False]]],
+							['INS_CF_2154110_i1401T_668L_rrs',['asynonymous', ['SLIS']]]]:
 			result = classify_COM_mutation(test)
 			self.assertTrue((result[0] == expected[0]) and (result[1] == expected[1]), msg = '{} failed to classify as {} reported as {}'.format(test,expected, result))
 
@@ -202,28 +202,28 @@ class Test(unittest.TestCase):
 		tests = []
 
 		for i in range(500,542):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),['asynonymous','FLQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),['asynonymous',['FLQ']]])
 
 		for i in range(500,542):
-			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrB'.format(i),['synonymous','FLQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrB'.format(i),['synonymous',['FLQ']]])
 
 		for i in range(0,490):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, [False]]])
 
 		for i in range(543,1000):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrB'.format(i),[False, [False]]])
 
 		for i in range(89,95):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),['asynonymous','FLQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),['asynonymous',['FLQ']]])
 
 		for i in range(89,95):
-			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrA'.format(i),['synonymous','FLQ']])
+			tests.append(['SNP_CN_6737_A1615G_T{}T_gyrA'.format(i),['synonymous',['FLQ']]])
 
 		for i in range(0,88):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),[False, [False]]])
 
 		for i in range(96,150):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_gyrA'.format(i),[False, [False]]])
 
 		for test,expected in tests:
 			result = classify_COM_mutation(test)
@@ -235,16 +235,16 @@ class Test(unittest.TestCase):
 		tests = []
 
 		for i in range(424,454):
-			tests.append(['SNP_CN_761141_C1335G_H{}Q_rpoB'.format(i),['asynonymous','RIF']])
+			tests.append(['SNP_CN_761141_C1335G_H{}Q_rpoB'.format(i),['asynonymous',['RIF']]])
 
 		for i in range(424,454):
-			tests.append(['SNP_CN_761141_C1335G_H{}H_rpoB'.format(i),['synonymous','RIF']])
+			tests.append(['SNP_CN_761141_C1335G_H{}H_rpoB'.format(i),['synonymous',['RIF']]])
 
 		for i in range(0,424):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_rpoB'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_rpoB'.format(i),[False, [False]]])
 
 		for i in range(455,1000):
-			tests.append(['SNP_CN_6737_A1615G_T{}A_rpoB'.format(i),[False, False]])
+			tests.append(['SNP_CN_6737_A1615G_T{}A_rpoB'.format(i),[False, [False]]])
 
 		for test,expected in tests:
 			result = classify_COM_mutation(test)
@@ -254,19 +254,19 @@ class Test(unittest.TestCase):
 		"""Test commercial classifier to see if it can detect positive and negative for INH commercial mutations"""
 		
 		tests = []
-		tests.append(['SNP_CN_761141_C1335G_S315T_katG',['asynonymous','INH']])
-		tests.append(['SNP_CN_761141_C1335G_S315S_katG',['synonymous','INH']])
-		tests.append(['SNP_CN_761141_C1335G_S314S_katG',[False, False]])
-		tests.append(['SNP_CN_761141_C1335G_S316S_katG',[False, False]])
-		tests.append(['SNP_CN_761141_C1335G_S400S_katG',[False, False]])
-		tests.append(['SNP_P_1673432_T8C_promoter-fabG1-inhA',['asynonymous','INH']])
-		tests.append(['SNP_P_1673432_T8T_promoter-fabG1-inhA',['synonymous','INH']])
-		tests.append(['SNP_P_1673432_T15C_promoter-fabG1-inhA',['asynonymous','INH']])
-		tests.append(['SNP_P_1673432_T15T_promoter-fabG1-inhA',['synonymous','INH']])
-		tests.append(['SNP_P_1673432_T16C_promoter-fabG1-inhA',['asynonymous','INH']])
-		tests.append(['SNP_P_1673432_T16T_promoter-fabG1-inhA',['synonymous','INH']])
-		tests.append(['SNP_P_1673432_T17C_promoter-fabG1-inhA',[False, False]])
-		tests.append(['SNP_P_1673432_T13T_promoter-fabG1-inhA',[False, False]])
+		tests.append(['SNP_CN_761141_C1335G_S315T_katG',['asynonymous',['INH']]])
+		tests.append(['SNP_CN_761141_C1335G_S315S_katG',['synonymous',['INH']]])
+		tests.append(['SNP_CN_761141_C1335G_S314S_katG',[False, [False]]])
+		tests.append(['SNP_CN_761141_C1335G_S316S_katG',[False, [False]]])
+		tests.append(['SNP_CN_761141_C1335G_S400S_katG',[False, [False]]])
+		tests.append(['SNP_P_1673432_T8C_promoter-fabG1-inhA',['asynonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T8T_promoter-fabG1-inhA',['synonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T15C_promoter-fabG1-inhA',['asynonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T15T_promoter-fabG1-inhA',['synonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T16C_promoter-fabG1-inhA',['asynonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T16T_promoter-fabG1-inhA',['synonymous',['INH']]])
+		tests.append(['SNP_P_1673432_T17C_promoter-fabG1-inhA',[False, [False]]])
+		tests.append(['SNP_P_1673432_T13T_promoter-fabG1-inhA',[False, [False]]])
 
 		for test,expected in tests:
 			result = classify_COM_mutation(test)

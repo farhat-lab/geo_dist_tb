@@ -387,9 +387,9 @@ class commercial_WGS_tester():
 				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS', 'PZA','EMB'])), 'resistant'] = 0
 				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'susceptible'] = 1
 				result.loc[(result.strain==strain) & (result['drug'].isin(['FLQ','SLIS','PZA','EMB'])), 'extra_annotation'] = 'IGNORE'
-				print("{} RECLASSIFYING".format(strain))
+				# print("{} RECLASSIFYING".format(strain))
 			else:
-				print("{} IS GOOD".format(strain))
+				# print("{} IS GOOD".format(strain))
 
 		return result
 
