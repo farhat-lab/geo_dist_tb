@@ -339,6 +339,8 @@ class commercial_WGS_tester():
 				drug_to_snp[drug].append(self.break_down_mutation(snp.rstrip()))
 				snp_to_drug[str(self.break_down_mutation(snp.rstrip()))] = drug
 		def check_if_snp(mutation, drug=None):
+			#To be a hit in WGS snp test must be a snp from AJRCCM paper list 
+			# We also accept any frameshift mutation for rpoB, pncA, and katG as a hit
 			if(drug):	
 				for snp in drug_to_snp[drug]:
 					if(snp.compare_variant_name_location(mutation)):
@@ -347,7 +349,11 @@ class commercial_WGS_tester():
 					if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
 						return True
 				elif(drug == 'PZA'):
+<<<<<<< HEAD
 					if(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+=======
+					if(mutatino.gene_name == 'pncA' and mutation.is_frameshift):
+>>>>>>> 6b9e53c5ebcc4ed211f1e15f3c9d6341d561e0b9
 						return True
 				elif(drug == 'INH'):
 					if(mutation.gene_name == 'katG' and mutation.is_frameshift):
@@ -360,7 +366,11 @@ class commercial_WGS_tester():
 						return True, drug
 				if(mutation.gene_name == 'rpoB' and mutation.is_frameshift):
 					return True, 'RIF'
+<<<<<<< HEAD
 				elif(mutation.gene_name == 'pncA' and mutation.is_frameshift):
+=======
+				elif(mutatino.gene_name == 'pncA' and mutation.is_frameshift):
+>>>>>>> 6b9e53c5ebcc4ed211f1e15f3c9d6341d561e0b9
 					return True, 'PZA'
 				elif(mutation.gene_name == 'katG' and mutation.is_frameshift):
 					return True, 'INH'
