@@ -75,6 +75,46 @@ class Test(unittest.TestCase):
 			else:
 				self.assertTrue(not found and ('AJRCCM' not in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
 
+
+	def test_CRYPTIC_labels(self):
+		"""Test to make sure all CRYPTIC labels are labeled correctly/none are not labeled that should be labeled """
+		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
+		mutations = [[drug,break_down_mutation(mutation), annotation] for drug,mutation, annotation in WGS[['drug','mutation','extra_annotation']].values]
+		processed_snps = []
+		snps = [commercial_WGS_tester.cryptic_snp_parser(i.rstrip) for i in open('panel.final.Cryptic_no_frameshift.txt','r').readlines()]
+		for drug, snp in snps:
+			if(drug == 'KAN' or drug == 'AMK' or drug == 'CAP'):
+				drug = 'SLIS'
+			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
+				drug = 'FLQ'
+			elif(drug != 'INH' and drug != 'RIF' and drug != 'PZA' and drug != 'STR' and drug != 'EMB' and drug != 'SLIS' and drug != 'FLQ'):
+				drug = None
+			if(drug):
+				processed_snps.append([break_down_mutation(snp.rstrip()), drug])
+
+		for drug_compare, mutation, annotation in mutations:
+			found = False
+			for snp, drug in processed_snps:
+				if(snp.compare_variant_name_location(mutation) and drug == drug_compare):
+					found = True
+			if(not found):
+				if(mutation.gene_name in ['rpoB','pncA', 'katG']):
+					change = mutation.AA_change
+					if('-' in change):
+						one, two = change.split('-')
+						if(len(one) != len(two) and (len(one)%3!= 0 or len(two)%3!=0)):
+							found = True
+					else:
+						if(len(change) == 1 or len(change) > 2):
+							found = True
+
+			if(found):
+				self.assertTrue(found == True and ('CRYPTIC' in annotation) , msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+			else:
+				self.assertTrue(not found and ('CRYPTIC' not in annotation), msg='Found was {} annotation was {} for {} which is not a correct label'.format(found, annotation, mutation))
+
+
+
 	def test_table_10_labels(self):
 		"""Test to make sure all table 10 labels are labeled correctly/none are not labeled that should be """
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
@@ -331,9 +371,9 @@ class Test(unittest.TestCase):
 				#return sysnonymous since something that large probs wont be synonymous
 				synonymous = False
 			#If its just an insertion or something again not gonna be synonymous
-			if(len(type_change) == 1):
+			elif(len(type_change) == 1):
 				synonymous = False
-			if(type_change[0] != type_change[1]):
+			elif(type_change[0] != type_change[1]):
 				synonymous = False
 
 			self.assertTrue(synonymous == False, msg='FOUND {} MUTATION WHICH IS synonymous!!!'.format(mutation))
@@ -352,9 +392,9 @@ class Test(unittest.TestCase):
 				#return sysnonymous since something that large probs wont be synonymous
 				synonymous = False
 			#If its just an insertion or something again not gonna be synonymous
-			if(len(type_change) == 1):
+			elif(len(type_change) == 1):
 				synonymous = False
-			if(type_change[0] != type_change[1]):
+			elif(type_change[0] != type_change[1]):
 				synonymous = False
 			if(not synonymous):
 				found_synonymous = True
