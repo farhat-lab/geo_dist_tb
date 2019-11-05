@@ -81,21 +81,11 @@ class Test(unittest.TestCase):
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
 		mutations = [[drug,break_down_mutation(mutation), annotation] for drug,mutation, annotation in WGS[['drug','mutation','extra_annotation']].values]
 		processed_snps = []
-		snps = [commercial_WGS_tester.cryptic_snp_parser(i.rstrip) for i in open('panel.final.Cryptic_no_frameshift.txt','r').readlines()]
-		for drug, snp in snps:
-			if(drug == 'KAN' or drug == 'AMK' or drug == 'CAP'):
-				drug = 'SLIS'
-			elif(drug == 'LEVO' or drug == 'MOXI' or drug == 'OFLX'):
-				drug = 'FLQ'
-			elif(drug != 'INH' and drug != 'RIF' and drug != 'PZA' and drug != 'STR' and drug != 'EMB' and drug != 'SLIS' and drug != 'FLQ'):
-				drug = None
-			if(drug):
-				processed_snps.append([break_down_mutation(snp.rstrip()), drug])
-
+		processed_snps = [commercial_WGS_tester.cryptic_snp_parser(i.rstrip()) for i in open('panel.final.Cryptic_no_frameshift.txt','r').readlines()]
 		for drug_compare, mutation, annotation in mutations:
 			found = False
-			for snp, drug in processed_snps:
-				if(snp.compare_variant_name_location(mutation) and drug == drug_compare):
+			for drug, snp in processed_snps:
+				if(snp.compare_variant_name_location(mutation) and drug_compare in drug):
 					found = True
 			if(not found):
 				if(mutation.gene_name in ['rpoB','pncA', 'katG']):
