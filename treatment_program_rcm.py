@@ -3,7 +3,7 @@ import argparse
 import os
 import re
 from treatment_program_rcm_helper import *
-
+import scipy.stats as stats
 
 
 class commercial_WGS_tester():
@@ -595,6 +595,27 @@ class commercial_WGS_tester():
 				print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, float(number_resistant_predicted)/number_resistant))
 				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 		
+		#Calculate P-value test for Peru v South Africa Sensitivity for SLI and FLQ
+		for drug, country_one, country_two in [['SLIS','Peru','South Africa'],['FLQ','Peru','South Africa']]:
+			local_df = df[df['country'] == country_one].copy()
+			number_resistant_predicted_one = local_df[(local_df['drug'] == drug) & (local_df['resistant'] == 1)]['strain'].nunique()
+			number_resistant_one =  self.strain_info[(self.strain_info[drug] == 1) & (self.strain_info['country'] == country_one)]['strain'].count()
+
+			local_df = df[df['country'] == country_two].copy()
+			number_resistant_predicted_two = local_df[(local_df['drug'] == drug) & (local_df['resistant'] == 1)]['strain'].nunique()
+			number_resistant_two =  self.strain_info[(self.strain_info[drug] == 1) & (self.strain_info['country'] == country_two)]['strain'].count()
+
+			table = [[number_resistant_one, number_resistant_one-number_resistant_predicted_one], 
+			[number_resistant_two, number_reistant_two-number_resistant_predicted_two]]
+
+			print("{}:\t{}/{} {}".format(country_one, number_resistant_predicted_one, number_resistant_one, number_resistant_predicted_one/float(number_resistant_one)))
+			print("{}:\t{}/{} {}".format(country_two, number_resistant_predicted_two, number_resistant_two, number_resistant_predicted_two/float(number_resistant_two)))
+
+			oddsratio, pvalue = stats.fisher_exact(table)
+			print(pvalue)
+
+		
+
 
 	def calculate_statistics_WGS(self):
 		# total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
