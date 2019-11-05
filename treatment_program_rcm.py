@@ -577,6 +577,25 @@ class commercial_WGS_tester():
 			print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, float(number_resistant_predicted)/number_resistant))
 			print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
 
+		print("CALCULATING SENSITIVITY/SPECIFICTY ACROSS COUNTRIES WITH TOP 5 AMOUNT DATA")
+		#First determine country with top 5 amount of data
+		top_five_countries = [i[0] for i in self.strain_info.groupby('country').country.value_counts().nlargest(5).index.tolist()]
+		df = pd.merge(df, self.strain_info[['strain','country']], on='strain',how='outer')
+		for country in top_five_countries:
+			print("STATISTICS FOR {}".format(country))
+			local_df = df[df['country'] == country].copy()
+			for drug in ['INH','RIF','SLIS','FLQ']:
+				number_resistant_predicted = local_df[(local_df['drug'] == drug) & (local_df['resistant'] == 1)]['strain'].nunique()
+				number_susceptible_predicted = local_df[(local_df['drug'] == drug) & (local_df['susceptible'] == 1)]['strain'].nunique()
+
+				# number_resistant, number_susceptible = self.get_revised_strain_info_count(df, drug)
+				number_resistant = self.strain_info[(self.strain_info[drug] == 1) & (self.strain_info['country'] == country)]['strain'].count()
+				number_susceptible = self.strain_info[(self.strain_info[drug] == 0) & (self.strain_info['country'] == country)]['strain'].count()
+
+				print("{} NUMBER RESISTANT PREDICTED (SENSITIVITY) {}/{} {}".format(drug, number_resistant_predicted, number_resistant, float(number_resistant_predicted)/number_resistant))
+				print("{} SUSCEPTIBLE CORRECTLY PREDICTED AS NOT RESISTANT (SPECIFICITY) {}/{} {}".format(drug, number_susceptible - number_susceptible_predicted, number_susceptible, 1-(number_susceptible_predicted/float(number_susceptible))))
+		
+
 	def calculate_statistics_WGS(self):
 		# total_df = pd.read_csv('WGS_raw_test_results',sep='\t')
 		# total_df = total_df[total_df['extra_annotation'] != 'IGNORE']
@@ -604,9 +623,9 @@ def main():
 	#NOTE ONLY RECLASSIFICATION HAPPENS FOR ALL_WGS_TEST!
 	tester = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps', 'panel.final.Cryptic_no_frameshift.txt')
 	#tester.perform_commercial_test()
-	tester.perform_WGS_test()
+	# tester.perform_WGS_test()
 	#tester.perform_commercial_post_processing()
-	tester.perform_WGS_post_processing()
+	# tester.perform_WGS_post_processing()
 	# tester.reclassify_raw_commercial()
 	# tester.reclassify_raw_WGS()
 	print("COMMERCIAL STATS")
