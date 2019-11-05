@@ -209,8 +209,9 @@ class commercial_WGS_tester():
 		condition_seven = 'kasA' == gene
 		condition_eight = 'katG' == gene 
 		condition_nine = 'promoter-embA-embB' == gene
+		condition_ten = 'fabG1' == gene
 
-		return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight or condition_nine
+		return condition_one or condition_two or condition_three or condition_four or condition_five or condition_six or condition_seven or condition_eight or condition_nine or condition_ten
 
 	def check_variant_WGS(self,variant):
 		gene_name, codon_position, type_change = variant.gene_name, variant.codon_location, variant.AA_change
@@ -219,7 +220,6 @@ class commercial_WGS_tester():
 		#Note negative signs are just positive
 		drug = []
 		return_variable = False
-		print("CHECKING THIS GENE: {}".format(gene_name))
 		if(self.check_INH(gene_name)):
 			drug.append('INH')
 			return_variable = True
@@ -241,7 +241,6 @@ class commercial_WGS_tester():
 		if(self.check_STR(gene_name)):
 			drug.append('STR')
 			return_variable = True
-		print("FOUND THESE DRUGS {}".format(drug))
 		#So here if its a LSP 
 		if(len(type_change) > 2 and return_variable):
 			#return sysnonymous since something that large probs wont be synonymous
@@ -275,9 +274,15 @@ class commercial_WGS_tester():
 					broken_down_mutation = self.break_down_mutation(line)
 					commercial, drugs = check(broken_down_mutation)
 					#Logic to exclude lineage mutations if needed to be detected
+					no_lineage = True
 					if(exclude_lineage):
+						#This means we are in a WGS test were being asynonymous and no lineage snp matters
 						if(self.check_lineage(broken_down_mutation)):
 							commercial = False
+							no_lineage = False
+					else:
+						#We are in a commercial test where synonymous v asynonymous and lineage doesn't matter
+						break_down_mutation.synonymous = False
 					old_commercial = commercial
 					for drug in drugs:
 						commercial = old_commercial
@@ -294,7 +299,7 @@ class commercial_WGS_tester():
 								extra_annotation = 'CRYPTIC/Table-10-snp'
 							else:
 								extra_annotation = 'Table-10-snp'
-						elif(include_only_snp and not broken_down_mutation.synonymous):
+						elif(include_only_snp and not broken_down_mutation.synonymous and no_lineage):
 							AJRCCM_test_result, AJRCCM_drug = self.check_snp(broken_down_mutation)
 							CRYPTIC_test_result, CRYPTIC_drug = self.check_snp_cryptic(broken_down_mutation)
 							if(AJRCCM_test_result):

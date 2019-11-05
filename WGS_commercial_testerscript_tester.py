@@ -2,8 +2,8 @@ import unittest
 from treatment_program_rcm_helper import *
 from treatment_program_rcm import *
 
-commercial_WGS_tester_full = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps')
-commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh',ignore=True)
+commercial_WGS_tester_full = commercial_WGS_tester('/home/lf61/lf61/mic_assemblies/46-annotate-vcfs-yasha/flatann2','strain_info.tsv','results_modified_unknown', 'lineage_snp', 'snps','panel.final.Cryptic_no_frameshift.txt')
+commercial_WGS_tester = commercial_WGS_tester('ugh','ugh','ugh','ugh','ugh','ugh',ignore=True)
 break_down_mutation = lambda gene: commercial_WGS_tester.break_down_mutation(gene)
 classify_COM_mutation =  lambda gene: commercial_WGS_tester.check_variant_commercial(break_down_mutation(gene))
 classify_WGS_mutation = lambda gene: commercial_WGS_tester.check_variant_WGS(gene)
@@ -293,7 +293,7 @@ class Test(unittest.TestCase):
 				self.assertTrue(not (lineage_snp in mutation), msg = '{} lineage snp found in {}'.format(lineage_snp, mutation))
 
 		for mutation in mutations:
-			for lineage_snp in lineage_snps_processed:
+			for lineage_snp in lineage_snps_unprocessed:
 				the_same = break_down_mutation(lineage_snp).compare_variant_name_location_AAchange(break_down_mutation(mutation))
 				self.assertTrue(not the_same, msg = '{} lineage snp found in {}'.format(lineage_snp, mutation))
 
@@ -314,25 +314,26 @@ class Test(unittest.TestCase):
 			for lineage_snp in lineage_snps_processed:
 				if(lineage_snp in mutation):
 					found = True
-				elif(break_down_mutation(lineage_snp).compare_variant_name_location_AAchange(break_down_mutation(mutation))):
+			for lineage_snp in lineage_snps_unprocessed:
+				if(break_down_mutation(lineage_snp).compare_variant_name_location_AAchange(break_down_mutation(mutation))):
 					found = True
 
-		self.assertTrue(found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
+		self.assertTrue(not found, msg='could not find lineage snp in commercial plz check to make sure accidential exclusion did not occur')
 
 	def test_no_synonymous_WGS(self):
 		"""Test to make sure WGS test has no synonymous mutations"""
 		WGS = pd.read_csv('WGS_aggregated_test_results',sep='\t')
-		mutations = [break_down_mutation(i) for i in list(WGS[mutation].values)]
+		mutations = [break_down_mutation(i) for i in list(WGS['mutation'].values)]
 		for mutation in mutations:
 			type_change = mutation.AA_change
 			synonymous = True
-			if(len(type_change) > 2 and return_variable):
+			if(len(type_change) > 2):
 				#return sysnonymous since something that large probs wont be synonymous
 				synonymous = False
 			#If its just an insertion or something again not gonna be synonymous
-			if(len(type_change) == 1 and return_variable):
+			if(len(type_change) == 1):
 				synonymous = False
-			if(return_variable and type_change[0] != type_change[1]):
+			if(type_change[0] != type_change[1]):
 				synonymous = False
 
 			self.assertTrue(synonymous == False, msg='FOUND {} MUTATION WHICH IS synonymous!!!'.format(mutation))
@@ -342,18 +343,18 @@ class Test(unittest.TestCase):
 	def test_synonymous_commercial(self):
 		"""Test to make sure commercial test has synonymous mutations"""
 		commercial = pd.read_csv('commercial_aggregated_test_results',sep='\t')
-		mutations = [break_down_mutation(i) for i in list(commercial[mutation].values)]
+		mutations = [break_down_mutation(i) for i in list(commercial['mutation'].values)]
 		found_synonymous= False
 		for mutation in mutations:
 			type_change = mutation.AA_change
 			synonymous = True
-			if(len(type_change) > 2 and return_variable):
+			if(len(type_change) > 2):
 				#return sysnonymous since something that large probs wont be synonymous
 				synonymous = False
 			#If its just an insertion or something again not gonna be synonymous
-			if(len(type_change) == 1 and return_variable):
+			if(len(type_change) == 1):
 				synonymous = False
-			if(return_variable and type_change[0] != type_change[1]):
+			if(type_change[0] != type_change[1]):
 				synonymous = False
 			if(not synonymous):
 				found_synonymous = True
