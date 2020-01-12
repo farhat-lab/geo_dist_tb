@@ -579,6 +579,7 @@ class commercial_WGS_tester():
 
 		print("CALCULATING SENSITIVITY/SPECIFICTY ACROSS COUNTRIES WITH TOP 5 AMOUNT DATA")
 		#First determine country with top 5 amount of data
+		print([i[0] for i in self.strain_info[self.strain_info['country'] != 'Not Provided'].groupby('country').country.value_counts.nlargest(5).index.tolist()])
 		df = pd.merge(df, self.strain_info[['strain','country']], on='strain',how='inner')
 		top_five_countries = [i[0] for i in df[df['country'] != 'Not Provided'].groupby('country').country.value_counts().nlargest(5).index.tolist()]
 		for country in top_five_countries:
